@@ -33,41 +33,9 @@ Estrategia de financiamiento y cobertura para Coca-Cola basada en el caso Molson
 
 ### Ver en línea
 
-| Entregable | Enlace |
-|---|---|
-| Dashboard interactivo | [Abrir dashboard](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/02_Dashboard/KO_Dashboard.html) |
-| Calculadora del convertible | [Abrir calculadora](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/04_Calculadora/Calculadora_Convertible_KO.html) |
-| Reporte reproducible (HTML del R Markdown) | [Abrir reporte](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/03_C%C3%B3digo%20y%20Datos/Proyecto_Final_KO.html) |
-| Notebook de Python | [Abrir en Google Colab](https://colab.research.google.com/github/a01452144-ccb/Proyecto-Final-Derivados-KO-/blob/main/03_C%C3%B3digo%20y%20Datos/05_Python/Valuacion_Convertible_KO.ipynb) · [copia en Google Drive](https://colab.research.google.com/drive/1FT61K311Yn0GtkBNkJtZOYHdaaIpc5lN?usp=sharing) |
-
-## Datos usados y su fuente
-
-Todos los archivos están en [`03_Código y Datos/datos`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/03_C%C3%B3digo%20y%20Datos/datos).
-
-| Archivo | Contenido | Fuente |
+| Entregable | Enlace | Respaldo |
 |---|---|---|
-| `parametros_mercado.csv` | Precio, volatilidades, Tesoro, swap, DV01, CDS, dividendo y otros parámetros, con su fuente y fecha | Bloomberg y LSEG |
-| `bonos_lseg_ko.csv` | 48 bonos vigentes: vencimiento, monto, cupón y moneda | LSEG Debt Structure, 3-nov-2026 |
-| `bloomberg_omon_ko_ene2029.csv` | Volatilidad implícita por strike, opciones a enero de 2029 | Bloomberg OMON, 9-nov-2026 |
-| `bloomberg_FA_KO.xlsx` y `.pdf` | Estados financieros trimestrales ajustados | Bloomberg FA, 9-nov-2026 |
-| `operaciones_investopedia.csv` | Entradas, salidas y P&L de cada operación | Investopedia Simulator |
-| `investopedia_trade_history_2026-11-09.xls` | Exportación original del Trade History | Investopedia Simulator |
-
-Otras fuentes: The Coca-Cola Company, Form 10-K 2025 y 8-K del tercer trimestre de 2026 (SEC); precios históricos de KO de Yahoo Finance (`quantmod` en R y `yfinance` en Python); caso *Molson Coors Brewing Co.: Valuing a Convertible Bond*.
-
-## Metodología
-
-- **Volatilidad:** histórica, EWMA (λ = 0.94) y GARCH(1,1) por máxima verosimilitud, comparadas con la volatilidad implícita de Bloomberg.
-- **Valuación del convertible:** bono recto más opción call, con Black-Scholes y árbol binomial CRR (europeo y americano).
-- **Call spread:** calls compradas al precio de conversión y warrants vendidos con 60 % de prima, cada pierna con la volatilidad implícita de su strike.
-- **Griegas y escenarios:** delta, gamma y vega del call spread; mapa de valor por precio y volatilidad.
-- **Monte Carlo:** 20,000 trayectorias de KO a cinco años para medir la probabilidad de conversión y el costo de la dilución.
-- **Cobertura de tasa:** T-lock dimensionado con el DV01 de Bloomberg SWPM y comparado con un swap SOFR con inicio diferido.
-
-## Cómo reproducirlo
-
-- **R:** abrir `03_Código y Datos/Proyecto_Final_KO.Rmd` en RStudio (paquetes `knitr`, `rmarkdown` y `quantmod`) y dar *Knit*. La carpeta `datos` debe quedar junto al Rmd.
-- **Python:** abrir el notebook en Google Colab con el enlace de arriba y ejecutar *Entorno de ejecución → Ejecutar todas*.
-- **Dashboard y calculadora:** abrirlos con los enlaces de la sección *Ver en línea*, o descargar los archivos `.html` y abrirlos en cualquier navegador (el dashboard requiere internet para cargar Plotly).
-
-Material académico; no es una recomendación de inversión.
+| Dashboard interactivo | [Abrir dashboard](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/02_Dashboard/KO_Dashboard.html) | [Ver aquí](https://raw.githack.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/main/02_Dashboard/KO_Dashboard.html) |
+| Calculadora del convertible | [Abrir calculadora](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/04_Calculadora/Calculadora_Convertible_KO.html) | [Ver aquí](https://raw.githack.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/main/04_Calculadora/Calculadora_Convertible_KO.html) |
+| Reporte reproducible (HTML del R Markdown) | [Abrir reporte](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/03_C%C3%B3digo%20y%20Datos/Proyecto_Final_KO.html) | [Ver aquí](https://raw.githack.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/main/03_C%C3%B3digo%20y%20Datos/Proyecto_Final_KO.html) |
+| Notebook de Python | [Abrir en Google Colab](https://colab.research.google.com/github/a01452144-ccb/Proyecto-Final-Derivados-KO-/blob/main/03_C%C3%B3digo%20y%20Datos/05_Python/Valuacion_Convertible_KO.ipynb) | [Copia en Google Drive](https://colab.research.google.com/drive/1FT61K311Yn0GtkBNkJtZOYHdaaIpc5lN?usp=sharing) |
