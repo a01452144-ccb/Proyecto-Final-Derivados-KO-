@@ -1,0 +1,692 @@
+---
+title: "Proyecto final: cobertura de tesorería y financiamiento de The Coca-Cola Company (KO)"
+subtitle: "Derivados y Administración de Riesgos Corporativos · EGADE Business School"
+author: "Equipo: Carmen Abigail Cázares Báez · Edgar Jiménez · Diana Lozada"
+date: "Profesor: Dr. Raymundo Díaz Robles · noviembre de 2026"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = "center")
+invisible(Sys.setlocale("LC_TIME", "C"))
+options(scipen = 999)
+num <- function(x, d = 0) formatC(x, format = "f", digits = d, big.mark = ",")
+pct <- function(x, d = 1) paste0(formatC(x, format = "f", digits = d), " %")
+BERRY <- c("#8c1d40", "#c0506f", "#d99aab", "#e8c4cf", "#b08a95", "#d9cfc6")
+COL_MON <- c(USD = "#8c1d40", EUR = "#c0506f", CHF = "#d9a441")
+```
+
+## Contexto
+
+El proyecto replica para una empresa real la decisión que enfrentó Molson Coors en 2007: cómo financiarse más barato y cubrir los riesgos de tesorería con bonos convertibles, opciones, futuros y swaps. La idea central es que un convertible es un bono recto más una opción call sobre la acción, y que cualquier mejora del cupón o de la prima de conversión tiene un precio en derivados.
+
+Elegimos **The Coca-Cola Company (NYSE: KO, RIC KO.N)** porque cumple todas las reglas. Cotiza en la NYSE y reporta 10-K, 10-Q y 8-K ante la SEC. Tiene 48 bonos vigentes por 41.9 mil millones de dólares en USD, EUR y CHF. Reporta derivados de tipo de cambio, tasa de interés y commodities en las notas de sus estados financieros. Su acción tiene opciones listadas y líquidas. Y tiene una necesidad real de cobertura: 7.7 mil millones de deuda vencen entre noviembre de 2026 y 2028, más de la mitad de sus ingresos son de fuera de EUA y depende de commodities como azúcar, jugos y aluminio.
+
+**Relación con la estrategia del equipo.** KO es una empresa nueva para el equipo, pero se relaciona directamente con la estrategia que seguimos en el curso. Nuestro portafolio de opciones sobre futuros cubría tipo de cambio (USD/MXN), petróleo (WTI) e índices (S&P 500 y Nasdaq-100), y Coca-Cola está expuesta justo a esos riesgos: más de la mitad de sus ingresos viene de fuera de EUA, depende de energía y commodities, y su acción es defensiva (beta de 0.38 contra el S&P 500 según Bloomberg). Elegirla nos permite pasar de cubrir esos riesgos como inversionistas a cubrirlos desde la tesorería de una empresa.
+
+Los datos provienen de LSEG Workspace (apps SOV, PEERS, Company Fundamentals, Debt Structure, Issuer Ratings y CDS Overview) al 3 de noviembre de 2026 y de Bloomberg (OMON, DES, FA, DDIS, CRPR, USGG5YR y SWPM) al 9 de noviembre de 2026, complementados con el comunicado de resultados del tercer trimestre de 2026 (Form 8-K). Todos los archivos de datos están en la carpeta `datos/` con su fuente en `datos/parametros_mercado.csv`. El dashboard interactivo y la calculadora acompañan a este documento con las mismas cifras.
+
+## 1. Overview de la empresa
+
+```{r mercado}
+mercado <- list(precio = 94.80, cambio = -1.07, ytd = 35.59, mkt_cap = 407.82, pe = 27.94, beta = 0.27,
+                div_yield = 2.21, min52 = 67.28, max52 = 96.25, pt_media = 98.38, acciones = 4.30,
+                cds5 = 34.564, cds10 = 57.682)
+knitr::kable(data.frame(
+  Indicador = c("Último precio (USD)", "Rendimiento en el año", "Rango de 52 semanas (USD)", "Market cap (miles de millones USD)",
+                "P/E (LTM)", "Beta (5 años)", "Dividend yield", "Precio objetivo medio de analistas (USD)"),
+  Valor = c(num(mercado$precio, 2), pct(mercado$ytd), paste(num(mercado$min52, 2), "–", num(mercado$max52, 2)),
+            num(mercado$mkt_cap, 1), paste0(num(mercado$pe, 2), "x"), num(mercado$beta, 2), pct(mercado$div_yield, 2),
+            num(mercado$pt_media, 2))), align = "lr", row.names = FALSE,
+  caption = "LSEG Workspace, apps SOV y PEERS, 3 de noviembre de 2026")
+```
+
+Coca-Cola vende concentrados, jarabes y bebidas terminadas en más de 200 países, con marcas como Coca-Cola, Sprite, Fanta, Dasani, Powerade, Costa, Minute Maid y fairlife. Opera en dos líneas: concentrados, que vende a sus embotelladoras, y producto terminado. Sus segmentos son EMEA, Latinoamérica, Norteamérica, Asia Pacífico e Inversiones en Embotelladoras. El consenso de analistas es de compra (21 de 27 recomiendan Buy o Strong Buy), con un precio objetivo medio de `r num(mercado$pt_media, 2)` dólares, un `r pct(100 * (mercado$pt_media / mercado$precio - 1), 0)` arriba del precio actual.
+
+### Fundamentales 2021–2025
+
+LSEG Company Fundamentals exportó las cifras en millones de pesos mexicanos. Se convierten a dólares con el tipo de cambio que reporta el mismo export: promedio del año para resultados y cierre del año para el balance.
+
+```{r fundamentales}
+anios  <- 2021:2025
+fx_avg <- c(20.2709169863014, 20.0911205479452, 17.7185635616438, 18.3037128415301, 19.1903309589041)
+fx_fin <- c(20.487, 19.474, 16.954, 20.8197, 18.0045)
+mxn <- data.frame(
+  ingresos  = c(783572.30, 863998.55, 810695.16, 861391.03, 920003.66),
+  ebitda    = c(255535.18, 268959.83, 254704.35, 278765.55, 308446.19),
+  ebit      = c(226101.81, 243645.02, 234717.81, 259089.06, 288296.34),
+  util_net  = c(198736.07, 192292.11, 189641.79, 194916.24, 252103.38),
+  intereses = c( 19196.56,  17720.37,  27056.25,  30310.95,  31740.81),
+  activos   = c(1933030.40, 1806466.66, 1656456.66, 2093400.02, 1887159.67),
+  pasivos   = c(1423723.58, 1303531.14, 1190560.74, 1544342.89, 1270055.43),
+  capital   = c( 509306.82,  502935.52,  465895.92,  549057.13,  617104.24),
+  deuda     = c( 876044.61,  762387.63,  713153.06,  926934.68,  819060.71),
+  deuda_cp  = c(  95162.12,   53981.93,  110489.22,   44699.90,   60729.18),
+  deuda_lp  = c( 780882.49,  708405.70,  602663.84,  882234.79,  758331.54),
+  caja      = c( 258648.38,  226502.09,  231642.50,  303363.85,  284579.13),
+  deuda_net = c( 617396.23,  535885.53,  481510.55,  623570.83,  534481.59))
+res_cols <- c("ingresos", "ebitda", "ebit", "util_net", "intereses")
+fin <- mxn
+fin[res_cols] <- mxn[res_cols] / fx_avg / 1000                                   # miles de millones de USD
+fin[setdiff(names(mxn), res_cols)] <- mxn[setdiff(names(mxn), res_cols)] / fx_fin / 1000
+fin$anio <- anios
+fin$de <- fin$deuda / fin$capital
+fin$dn_ebitda <- fin$deuda_net / fin$ebitda
+fin$d_activos <- fin$deuda / fin$activos
+
+razones <- data.frame(anio = anios,
+  margen_bruto  = c(60.27, 58.14, 59.49, 61.06, 61.63), margen_ebitda = c(32.61, 31.13, 31.42, 32.36, 33.53),
+  margen_op     = c(28.86, 28.20, 28.95, 30.08, 31.34), margen_neto   = c(25.36, 22.26, 23.39, 22.63, 27.40),
+  roe = c(46.20, 40.51, 42.82, 41.86, 45.97), roa = c(10.79, 10.23, 11.24, 10.74, 12.79),
+  cob_int = c(11.78, 13.75, 8.68, 8.55, 9.08), razon_circ = c(1.13, 1.15, 1.13, 1.03, 1.46))
+u <- fin[fin$anio == 2025, ]; r <- razones[razones$anio == 2025, ]
+
+knitr::kable(data.frame(Año = fin$anio, Ingresos = num(fin$ingresos, 2), EBITDA = num(fin$ebitda, 2),
+                        `Utilidad neta` = num(fin$util_net, 2), `Deuda total` = num(fin$deuda, 2),
+                        Capital = num(fin$capital, 2), check.names = FALSE),
+             align = "lrrrrr", row.names = FALSE, caption = "Miles de millones de USD (LSEG Company Fundamentals)")
+```
+
+```{r graf-anual, fig.width=10, fig.height=4}
+par(mfrow = c(1, 2), mar = c(4, 4.5, 3, 1))
+barplot(t(as.matrix(fin[, c("ingresos", "ebitda", "util_net")])), beside = TRUE, names.arg = anios,
+        col = BERRY[1:3], border = NA, las = 1, main = "Resultados anuales (USD miles de millones)")
+legend("topleft", c("Ingresos", "EBITDA", "Utilidad neta"), fill = BERRY[1:3], border = NA, bty = "n", cex = 0.85)
+matplot(anios, razones[, c("roe", "margen_ebitda", "margen_neto", "roa")], type = "b", pch = 19, lty = c(1, 1, 1, 3),
+        col = c(BERRY[1], BERRY[2], "#d9a441", "grey50"), lwd = 2, las = 1, xlab = "", ylab = "%", main = "Rentabilidad (%)")
+legend("right", c("ROE", "Margen EBITDA", "Margen neto", "ROA"), col = c(BERRY[1], BERRY[2], "#d9a441", "grey50"),
+       lty = c(1, 1, 1, 3), lwd = 2, bty = "n", cex = 0.8)
+```
+
+**Lectura.** En 2025 Coca-Cola facturó `r num(u$ingresos, 2)` mil millones de dólares con un margen EBITDA de `r pct(r$margen_ebitda)` y un margen neto de `r pct(r$margen_neto)`, muy por encima de su industria (8.5 %). Su ROE de `r pct(r$roe)` es de los más altos del sector de consumo. La rentabilidad se ha mantenido estable cinco años seguidos, que es justo lo que el mercado premia con un P/E alto.
+
+### Año en curso: primeros nueve meses de 2026
+
+```{r nueve-meses}
+res9m <- c(ingresos = 39232, op = 13496, neta = 12358, cfo = 12471, capex = 1063, fcf = 11408)
+knitr::kable(data.frame(
+  Concepto = c("Ingresos", "Utilidad operativa", "Utilidad neta", "Flujo de operación", "Gasto de capital", "Flujo libre",
+               "Margen operativo", "Margen neto"),
+  Valor = c(num(res9m[1:6]), pct(100 * res9m["op"] / res9m["ingresos"]), pct(100 * res9m["neta"] / res9m["ingresos"]))),
+  align = "lr", row.names = FALSE, caption = "Millones de USD, nueve meses al 2 de octubre de 2026 (Form 8-K del 3T 2026)")
+```
+
+La empresa subió su guía para 2026: crecimiento orgánico de ingresos de al menos 5 %, crecimiento de la UPA comparable de al menos 11 % y flujo libre de al menos 13 mil millones de dólares.
+
+### Ingresos por segmento
+
+```{r segmentos, fig.width=7, fig.height=4.2}
+seg <- data.frame(segmento = c("Norteamérica", "EMEA", "Latinoamérica", "Asia Pacífico", "Embotelladoras", "Corporativo"),
+                  mxn = c(375727.49, 207888.86, 121493.99, 102246.08, 109883.84, 2763.41))
+seg$usd <- seg$mxn / fx_avg[5] / 1000
+fuera_eua <- 100 * (1 - seg$usd[1] / sum(seg$usd))
+par(mar = c(1, 1, 3, 1))
+pie(seg$usd, labels = paste0(seg$segmento, " ", round(100 * seg$usd / sum(seg$usd)), "%"), col = BERRY, border = "white",
+    main = "Mezcla de ingresos por segmento, 2025")
+```
+
+**Lectura.** Norteamérica genera alrededor del `r pct(100 - fuera_eua, 0)` de los ingresos; el `r pct(fuera_eua, 0)` restante viene de fuera de EUA. Como Coca-Cola reporta en dólares, un dólar fuerte reduce el valor de esos ingresos al convertirlos. Esto justifica el uso de forwards y opciones de tipo de cambio, y que parte de su deuda esté en euros y francos suizos.
+
+## 2. Comparación con pares
+
+```{r pares, fig.width=8, fig.height=4.5}
+peers <- data.frame(
+  Ticker  = c("KO.N", "PEP.OQ", "KDP.OQ", "HEIN.AS", "DANO.PA", "DGE.L", "ULVR.L", "NESN.S"),
+  Empresa = c("Coca-Cola", "PepsiCo", "Keurig Dr Pepper", "Heineken", "Danone", "Diageo", "Unilever", "Nestlé"),
+  PE  = c(27.94, 17.26, 31.35, 19.69, 21.88, 30.37, 24.11, 29.19),
+  ROE = c(43.32, 42.85, 8.36, 9.94, 10.84, 14.99, 30.96, 26.53),
+  DE  = c(111.36, 232.73, 117.39, 107.96, 100.64, 197.88, 198.28, 215.00))
+knitr::kable(setNames(peers, c("Ticker", "Empresa", "P/E (LTM)", "ROE (%)", "D/E (%)")), row.names = FALSE,
+             caption = "LSEG PEERS, 3 de noviembre de 2026")
+par(mar = c(4.5, 4.5, 3, 1))
+plot(peers$DE, peers$ROE, pch = 19, cex = peers$PE / 9, col = ifelse(peers$Ticker == "KO.N", BERRY[1], "grey65"),
+     xlab = "D/E (%)", ylab = "ROE (%)", main = "Apalancamiento contra rentabilidad (tamaño = P/E)", las = 1,
+     xlim = c(85, 250), ylim = c(0, 50))
+text(peers$DE, peers$ROE, peers$Empresa, pos = 3, cex = 0.75)
+```
+
+**Lectura.** Coca-Cola tiene el ROE más alto del grupo (43 %) con un apalancamiento moderado: su D/E de 111 % es menos de la mitad que el de PepsiCo o Nestlé. El mercado le paga un múltiplo alto (P/E de 27.9x contra 17.3x de PepsiCo) por la estabilidad de su flujo. Para el proyecto esto importa por dos razones: una acción con P/E alto y beta baja hace que la opción de conversión sea relativamente barata, y emitir un convertible no debería presionar la calificación.
+
+## 3. Estructura de deuda
+
+```{r bonos}
+# Bonos vigentes de LSEG Debt Structure (KO.N, 3-nov-2026). Montos en millones de USD.
+bonos <- read.csv("datos/bonos_lseg_ko.csv")
+bonos$vencimiento <- as.Date(bonos$vencimiento)
+bonos$anio  <- as.integer(format(bonos$vencimiento, "%Y"))
+bonos$plazo <- as.numeric(bonos$vencimiento - as.Date("2026-11-03")) / 365.25
+total_bonos <- sum(bonos$monto) / 1000
+cupon_prom  <- weighted.mean(bonos$cupon, bonos$monto)
+plazo_prom  <- weighted.mean(bonos$plazo, bonos$monto)
+venc_26_28  <- sum(bonos$monto[bonos$anio <= 2028]) / 1000
+por_moneda  <- aggregate(monto ~ moneda, bonos, sum); por_moneda$pct <- 100 * por_moneda$monto / sum(por_moneda$monto)
+cupon_moneda <- sapply(split(bonos, bonos$moneda), function(x) weighted.mean(x$cupon, x$monto))
+
+knitr::kable(data.frame(
+  Indicador = c("Deuda total (dic-2025, miles de millones USD)", "Deuda de largo plazo / total", "Deuda total (oct-2026, miles de millones USD)",
+                "Bonos vigentes (miles de millones USD)", "Número de emisiones", "Cupón promedio ponderado", "Plazo promedio ponderado (años)",
+                "Vence entre nov-2026 y 2028 (miles de millones USD)", "Deuda / activos", "Cobertura de intereses (EBIT / intereses)",
+                "Deuda neta / EBITDA", "Razón circulante"),
+  Valor = c(num(u$deuda, 2), pct(100 * u$deuda_lp / u$deuda, 0), num((73 + 4923 + 36623) / 1000, 2),
+            num(total_bonos, 1), nrow(bonos), pct(cupon_prom, 2), num(plazo_prom, 1), num(venc_26_28, 2),
+            pct(100 * u$d_activos), paste0(num(r$cob_int, 1), "x"), paste0(num(u$dn_ebitda, 2), "x"),
+            paste0(num(r$razon_circ, 2), "x"))), align = "lr", row.names = FALSE,
+  caption = "LSEG Debt Structure y Company Fundamentals; deuda a oct-2026 del 8-K del 3T 2026")
+```
+
+```{r graf-deuda, fig.width=10, fig.height=4}
+par(mfrow = c(1, 2), mar = c(4, 4.5, 3, 1))
+pie(por_moneda$monto, labels = paste0(por_moneda$moneda, " ", round(por_moneda$pct), "%"),
+    col = COL_MON[por_moneda$moneda], border = "white", main = "Bonos por moneda")
+m <- rbind(c(1551, 1822, 42119), c(73, 4923, 36623))
+barplot(m, beside = TRUE, names.arg = c("Papel comercial", "Circulante LP", "Largo plazo"), col = BERRY[c(3, 1)],
+        border = NA, las = 1, cex.names = 0.85, main = "Deuda en balance: dic-2025 vs oct-2026 (millones de USD)")
+legend("topleft", c("Dic-2025", "Oct-2026"), fill = BERRY[c(3, 1)], border = NA, bty = "n")
+```
+
+**Lectura.** Coca-Cola tiene `r nrow(bonos)` bonos vigentes por `r num(total_bonos, 1)` mil millones de dólares, con un cupón promedio de apenas `r pct(cupon_prom, 2)` y un plazo promedio de `r num(plazo_prom, 1)` años, porque la mayor parte se emitió con tasas bajas entre 2020 y 2021. El `r pct(por_moneda$pct[por_moneda$moneda == "USD"], 0)` está en dólares, el `r pct(por_moneda$pct[por_moneda$moneda == "EUR"], 0)` en euros (cupón promedio de `r pct(cupon_moneda[["EUR"]], 2)`) y el `r pct(por_moneda$pct[por_moneda$moneda == "CHF"], 0)` en francos suizos. Eso crea una cobertura natural parcial frente a sus ingresos en Europa, pero también exposición cambiaria en el principal. Con cobertura de intereses de `r num(r$cob_int, 1)`x y deuda neta/EBITDA de `r num(u$dn_ebitda, 2)`x hay holgura amplia para emitir. Entre diciembre de 2025 y octubre de 2026 la empresa pagó casi todo su papel comercial y la porción que vence en doce meses subió de 1.8 a 4.9 mil millones.
+
+## 4. Calendario de vencimientos
+
+```{r vencimientos, fig.width=10, fig.height=4.2}
+bonos$cubeta <- ifelse(bonos$anio <= 2040, as.character(bonos$anio), "2041+")
+perfil <- tapply(bonos$monto / 1000, list(bonos$moneda, factor(bonos$cubeta, levels = sort(unique(bonos$cubeta)))), sum)
+perfil[is.na(perfil)] <- 0
+perfil <- perfil[c("USD", "EUR", "CHF"), ]
+par(mar = c(4, 4.5, 3, 1))
+barplot(perfil, col = COL_MON[rownames(perfil)], border = NA, las = 2, cex.names = 0.8,
+        main = "Perfil de vencimientos por moneda (USD miles de millones)")
+legend("top", rownames(perfil), fill = COL_MON[rownames(perfil)], border = NA, bty = "n", horiz = TRUE)
+```
+
+```{r cupon-venc, fig.width=10, fig.height=4}
+b <- bonos[bonos$anio < 2066, ]
+par(mar = c(4, 4.5, 3, 1))
+plot(b$vencimiento, b$cupon, pch = 19, cex = 0.6 + sqrt(b$monto) / 15, col = adjustcolor(COL_MON[b$moneda], 0.8),
+     xlab = "", ylab = "Cupón (%)", las = 1, main = "Cupón contra vencimiento hasta 2065 (tamaño = monto)")
+legend("topleft", names(COL_MON), col = COL_MON, pch = 19, bty = "n")
+
+prox <- bonos[bonos$anio <= 2028, c("vencimiento", "moneda", "cupon", "monto")]
+knitr::kable(transform(prox, vencimiento = format(vencimiento, "%d-%b-%Y"), cupon = num(cupon, 3), monto = num(monto, 1)),
+             col.names = c("Vencimiento", "Moneda", "Cupón (%)", "Monto (USD M)"), align = "llrr", row.names = FALSE,
+             caption = "Próximos vencimientos (2026–2028): la deuda que hay que refinanciar")
+```
+
+**Lectura.** Entre noviembre de 2026 y 2028 vencen `r num(venc_26_28, 2)` mil millones de dólares, en su mayoría con cupones de 1.0 % a 3.4 %. Refinanciarlos hoy con deuda recta costaría bastante más que su cupón actual. Es el mismo problema que en 2007 resolvió Molson Coors con un convertible.
+
+## 5. Calificación crediticia y riesgo de crédito
+
+```{r calificacion}
+calif <- data.frame(
+  Agencia = c("S&P", "S&P", "Moody's", "Moody's", "Fitch", "Egan-Jones"),
+  Tipo = c("Largo plazo emisor / senior no garantizado", "Corto plazo / papel comercial", "Senior no garantizado",
+           "Corto plazo / papel comercial", "Largo plazo (IDR)", "Senior no garantizado"),
+  Calificación = c("A+", "A-1", "A1", "P-1", "WD (retirada)", "A"),
+  Desde = c("26-abr-2018", "26-abr-2018", "20-nov-2018", "06-jun-2023", "15-nov-2023", "03-ago-2016"),
+  Perspectiva = c("Estable", "—", "Estable", "Estable", "—", "—"))
+knitr::kable(calif, row.names = FALSE, caption = "LSEG Issuer Ratings, 3 de noviembre de 2026")
+knitr::kable(data.frame(Indicador = c("CDS a 5 años (pb)", "CDS a 10 años (pb)", "StarMine credit risk"),
+                        Valor = c(num(mercado$cds5, 1), num(mercado$cds10, 1), "95 / 100")),
+             align = "lr", row.names = FALSE, caption = "LSEG CDS Overview (Markit, senior, USD) y StarMine")
+```
+
+**Lectura.** Coca-Cola mantiene grado de inversión alto (A+ / A1) sin cambios desde 2018, con perspectiva estable. El CDS a 5 años en `r num(mercado$cds5, 1)` pb confirma un riesgo de crédito muy bajo y sirve como estimación del diferencial de crédito que se suma a la tasa del Tesoro para valuar el componente de bono recto del convertible. Fitch retiró su calificación en 2023 a petición del emisor, así que las referencias relevantes son S&P y Moody's. Un convertible senior no garantizado tendría la misma calificación que la deuda actual.
+
+### Validación con Bloomberg
+
+```{r validacion}
+knitr::kable(data.frame(
+  Indicador = c("Deuda en bonos (miles de millones USD)", "Número de emisiones", "Cupón promedio ponderado", "Plazo promedio ponderado (años)",
+                "Deuda total en balance, 3T 2026 (miles de millones USD)", "Calificación Moody's / S&P", "Probabilidad de incumplimiento a 1 año implícita en el mercado"),
+  LSEG = c(num(total_bonos, 1), nrow(bonos), pct(cupon_prom, 2), num(plazo_prom, 1), "41.6 (8-K)", "A1 / A+", "—"),
+  Bloomberg = c("42.5 (DDIS, solo principal)", "53", "2.46 %", "11.5", "41.6 (FA)", "A1 / A+ (CRPR)", "0.21 % (MIPD), categoría IG1"),
+  check.names = FALSE), align = "lrr", row.names = FALSE, caption = "Bloomberg DDIS, CRPR y FA, 9 de noviembre de 2026")
+```
+
+**Lectura.** Las dos fuentes coinciden en lo esencial: mismo cupón promedio, plazo casi igual y la misma calificación. La diferencia de unos 600 millones y cinco emisiones viene de notas a tasa flotante que Bloomberg incluye en DDIS y que no estaban en la lista de LSEG; con ellas, **2027 es el año de mayores vencimientos (≈ 5.3 mil millones)**, justo el bloque que proponemos refinanciar. Bloomberg ubica a KO en IG1, su categoría de menor riesgo, con una probabilidad de incumplimiento a un año de 0.21 %, consistente con el CDS de `r num(mercado$cds5, 1)` pb.
+
+## 6. Cotización y volatilidad de KO
+
+La volatilidad de la acción es el dato que más pesa en la valuación del convertible, porque define cuánto vale la opción que se le entrega al inversionista. Esta sección compara la volatilidad histórica, EWMA y GARCH(1,1) de KO con la volatilidad implícita que reporta Bloomberg.
+
+```{r cotizacion, fig.width=10, fig.height=3.8}
+library(quantmod)
+ko <- tryCatch(getSymbols("KO", src = "yahoo", from = "2021-11-01", to = "2026-11-10", auto.assign = FALSE),
+               error = function(e) NULL)
+# Resultados de la misma estimación corrida en Google Colab con datos de Yahoo Finance (respaldo sin conexión)
+vol_colab <- c(hist5 = 0.1684, hist30 = 0.1980, ewma = 0.1987, garch_lp = 0.1740, garch5 = 0.1741)
+garch_colab <- c(omega = 4.82e-06, alpha = 0.0669, beta = 0.8930)
+if (!is.null(ko)) {
+  p <- Ad(ko); rr <- as.numeric(na.omit(diff(log(p)))); x <- rr - mean(rr)
+  ewma <- numeric(length(x)); ewma[1] <- var(x)
+  for (t in 2:length(x)) ewma[t] <- 0.94 * ewma[t - 1] + 0.06 * x[t - 1]^2
+  nll <- function(th) { w <- th[1]; a <- th[2]; b <- th[3]
+    if (w <= 0 || a < 0 || b < 0 || a + b >= 1) return(1e10)
+    v <- numeric(length(x)); v[1] <- var(x)
+    for (t in 2:length(x)) v[t] <- w + a * x[t - 1]^2 + b * v[t - 1]
+    0.5 * sum(log(2 * pi * v) + x^2 / v) }
+  fit <- optim(c(var(x) * 0.05, 0.08, 0.90), nll, control = list(maxit = 4000))
+  w <- fit$par[1]; a <- fit$par[2]; b <- fit$par[3]; VL <- w / (1 - a - b)
+  v <- numeric(length(x)); v[1] <- var(x); for (t in 2:length(x)) v[t] <- w + a * x[t - 1]^2 + b * v[t - 1]
+  h <- 1:(252 * 5); vf <- VL + (a + b)^(h - 1) * (w + a * x[length(x)]^2 + b * v[length(v)] - VL)
+  vol_colab <- c(hist5 = sd(rr) * sqrt(252), hist30 = sd(tail(rr, 30)) * sqrt(252), ewma = sqrt(ewma[length(ewma)] * 252),
+                 garch_lp = sqrt(VL * 252), garch5 = sqrt(mean(vf) * 252))
+  garch_colab <- c(omega = w, alpha = a, beta = b)
+  par(mfrow = c(1, 2), mar = c(3, 4.5, 3, 1))
+  plot(index(p), as.numeric(p), type = "l", col = BERRY[1], lwd = 1.5, xlab = "", ylab = "USD", las = 1, main = "KO: precio ajustado (5 años)")
+  fechas <- index(p)[-1]
+  plot(fechas, sqrt(v * 252) * 100, type = "l", col = BERRY[1], lwd = 1.3, xlab = "", ylab = "%", las = 1, main = "Volatilidad GARCH(1,1) vs. implícita")
+  lines(fechas, sqrt(ewma * 252) * 100, col = BERRY[3])
+  abline(h = 20.18, lty = 2, col = "#d9a441", lwd = 2)
+  legend("topright", c("GARCH(1,1)", "EWMA", "Implícita Bloomberg"), col = c(BERRY[1], BERRY[3], "#d9a441"), lty = c(1, 1, 2), bty = "n", cex = 0.8)
+  fuente_vol <- "Yahoo Finance vía quantmod"
+} else {
+  fuente_vol <- "Google Colab con datos de Yahoo Finance, 9-nov-2026 (este documento se compiló sin conexión)"
+  cat("Sin conexión a Yahoo Finance al compilar: se muestran los resultados de la misma estimación corrida en Colab.\n")
+}
+```
+
+```{r vol-tabla}
+knitr::kable(data.frame(
+  Medida = c("Histórica 5 años", "Histórica 30 días", "EWMA (λ = 0.94)", "GARCH(1,1) de largo plazo", "GARCH(1,1) promedio a 5 años",
+             "Implícita Bloomberg, strike 120 (ene-2029)"),
+  `Volatilidad anual` = pct(100 * c(vol_colab, 0.2018)), check.names = FALSE), align = "lr", row.names = FALSE,
+  caption = paste0("Fuente: ", fuente_vol, "; Bloomberg OMON. GARCH: ω = ", formatC(garch_colab[["omega"]], format = "e", digits = 2),
+                   ", α = ", num(garch_colab[["alpha"]], 4), ", β = ", num(garch_colab[["beta"]], 4),
+                   ", persistencia = ", num(garch_colab[["alpha"]] + garch_colab[["beta"]], 4)))
+```
+
+```{r sonrisa, fig.width=8, fig.height=3.8}
+omon <- read.csv("datos/bloomberg_omon_ko_ene2029.csv")
+par(mar = c(4.5, 4.5, 3, 1))
+plot(omon$strike, omon$ivm_call, type = "b", pch = 19, col = BERRY[1], lwd = 1.5, las = 1, xlab = "Strike (USD)",
+     ylab = "Volatilidad implícita (%)", main = "Sonrisa de volatilidad de KO, opciones a enero de 2029 (Bloomberg OMON)", xlim = c(50, 160))
+abline(v = c(96.03, 120.04, 153.65), lty = 3, col = "grey50")
+text(c(96.03, 120.04, 153.65), max(omon$ivm_call), c("Precio", "Conversión", "Warrant"), pos = 4, cex = 0.75)
+```
+
+**Lectura.** La volatilidad implícita de Bloomberg para el strike del precio de conversión (`r pct(20.18)`) está unos `r num(100 * (0.2018 - vol_colab[["garch5"]]), 1)` puntos por encima del pronóstico GARCH a cinco años (`r pct(100 * vol_colab[["garch5"]])`) y en línea con la volatilidad reciente (EWMA de `r pct(100 * vol_colab[["ewma"]])`). La persistencia del GARCH de `r num(garch_colab[["alpha"]] + garch_colab[["beta"]], 2)` indica que los choques de volatilidad se disipan en pocos meses. Para Coca-Cola esto es una buena noticia: el mercado le paga una volatilidad relativamente alta por la opción que entrega en el convertible, y también por los warrants que vende. La curva de volatilidad baja en los strikes altos (sesgo típico de acciones), por lo que el warrant se valúa con `r pct(19.9)`, un poco menos que las calls a 120.
+
+## 7. Riesgos de tesorería y necesidad de cobertura
+
+```{r riesgos, echo=FALSE}
+knitr::kable(data.frame(
+  Riesgo = c("Tasa / refinanciamiento", "Tipo de cambio", "Commodities", "Crédito"),
+  Nivel = c("Alto", "Medio-alto", "Medio", "Bajo"),
+  Origen = c(sprintf("%s mil millones vencen entre 2026 y 2028 con cupones de 1.0 %% a 3.4 %%, por debajo de lo que pagaría hoy en deuda recta", num(venc_26_28, 1)),
+             sprintf("%s de los ingresos y %s de los bonos están fuera de USD", pct(fuera_eua, 0), pct(100 - por_moneda$pct[por_moneda$moneda == "USD"], 0)),
+             "Azúcar, jarabe de maíz, jugo de naranja, café y aluminio para latas",
+             sprintf("A+ / A1 estable y CDS a 5 años de %s pb", num(mercado$cds5, 1))),
+  Instrumentos = c("Convertible para bajar el cupón; T-lock o swap de inicio diferido antes de emitir; IRS para mezclar tasa fija y flotante",
+                   "Forwards y opciones de divisas sobre flujos esperados; cross-currency swaps para la deuda en EUR y CHF",
+                   "Futuros y swaps de commodities (azúcar No. 11 en ICE, aluminio en CME/LME)",
+                   "Capacidad para emitir sin poner en riesgo la calificación")),
+  align = "llll", row.names = FALSE)
+```
+
+El uso de derivados que reporta Coca-Cola está en la nota "Hedging Transactions and Derivative Financial Instruments" de su 10-K; los nocionales por tipo se validarán con el 10-K del ejercicio 2025.
+
+## 8. Propuesta de financiamiento y cobertura
+
+```{r propuesta}
+prima_conv <- 0.25; prima_techo <- 0.60
+monto_emision <- 3000e6   # Bonos en USD que vencen entre marzo y junio de 2027
+S0 <- 96.03               # Precio de KO al 9-nov-2026 (Bloomberg OMON)
+propuesta <- data.frame(
+  Elemento = c("Instrumento", "Monto", "Uso de fondos", "Precio de conversión", "Call spread", "Cobertura de tasa",
+               "Cobertura cambiaria", "Beneficio buscado"),
+  `Molson Coors (2007)` = c("Convertible senior no garantizado a 6 años", "$500M ampliado a $575M",
+                            "Recomprar bonos 6.38 % a 2012 y fondear pensiones", "25 % sobre $87.61 = $109.51",
+                            "Calls al 25 % y warrants al 60 % ($140.18)", "T-lock (ganancia de $1.4M)", "—",
+                            "~$15M menos de gasto financiero al año"),
+  `Coca-Cola (propuesta)` = c("Convertible senior no garantizado a 5 años", "$3.0B",
+                              "Refinanciar los bonos en USD de mar–jun 2027 ($3.0B)",
+                              sprintf("%.0f %% sobre $%.2f = $%.2f", 100 * prima_conv, S0, S0 * (1 + prima_conv)),
+                              sprintf("Calls a $%.2f y warrants al %.0f %% ($%.2f)", S0 * (1 + prima_conv), 100 * prima_techo, S0 * (1 + prima_techo)),
+                              "T-lock sobre el Tesoro a 5 años durante la colocación",
+                              "Cross-currency swap para refinanciar el bono EUR de mar-2027 ($1.68B equivalentes)",
+                              "Cupón menor que la deuda recta y dilución controlada con el call spread"),
+  check.names = FALSE)
+knitr::kable(propuesta, row.names = FALSE, caption = "Estructura propuesta con el caso Molson Coors como modelo")
+```
+
+**Por qué un convertible y no deuda recta o capital.** Frente a deuda recta, el convertible paga un cupón menor porque el inversionista recibe una opción sobre la acción; a cambio, Coca-Cola acepta una posible dilución futura. Frente a emitir acciones, la dilución solo ocurre si la acción sube por encima del precio de conversión y, con el call spread, solo por encima del techo de 60 %. La desventaja es la complejidad: el ahorro de cupón se paga con la opción entregada y con el costo del call spread.
+
+## 9. Parámetros de mercado para la valuación
+
+```{r parametros}
+# Volatilidades implícitas IVM de Bloomberg OMON, opciones de KO a ene-2029 (802 días), 9-nov-2026
+sigma   <- 0.2018              # Strike 120 = precio de conversión
+sigma_w <- 0.1990              # Strike ≈ 154 = warrant (IVM de 19.9 % en los strikes 140-145)
+sigma_atm <- 0.2179            # Strike 95, cerca del dinero (referencia)
+q      <- mercado$div_yield / 100   # Rendimiento por dividendo (LSEG SOV)
+rf     <- 0.046767             # Tesoro a 5 años (Bloomberg USGG5YR, 9-nov-2026)
+swap5  <- 0.043975             # Swap SOFR a 5 años (Bloomberg SWPM)
+dv01_10mm <- 4456.30           # DV01 de un swap a 5 años por 10 millones (Bloomberg SWPM)
+spread <- mercado$cds5 / 10000 # CDS a 5 años como diferencial de crédito (LSEG CDS Overview)
+plazo  <- 5
+nominal_bono <- 1000
+y_recta <- rf + spread
+
+knitr::kable(data.frame(
+  Parámetro = c("Precio de KO", "Volatilidad implícita strike 120 / warrant", "Dividendo", "Tesoro 5 años", "Swap SOFR 5 años", "Diferencial de crédito (CDS 5 años)",
+                "Rendimiento de la deuda recta", "Plazo", "Monto de la emisión"),
+  Valor = c(num(S0, 2), paste(pct(100 * sigma), "/", pct(100 * sigma_w)), pct(100 * q, 2), pct(100 * rf, 2), pct(100 * swap5, 2), paste(num(mercado$cds5, 1), "pb"),
+            pct(100 * y_recta, 2), paste(plazo, "años"), paste(num(monto_emision / 1e6), "millones USD")),
+  Fuente = c("Bloomberg OMON, 9-nov-2026", "Bloomberg OMON, ene-2029", "LSEG SOV y Bloomberg DES", "Bloomberg USGG5YR, 9-nov-2026", "Bloomberg SWPM, 9-nov-2026", "LSEG CDS Overview",
+             "Tesoro + CDS", "Supuesto", "LSEG Debt Structure")), align = "lll", row.names = FALSE)
+```
+
+## 10. Valuación del convertible: bono recto más opción
+
+Un convertible es un bono recto más una opción call sobre la acción. El cupón justo es el que hace que el bono recto más la opción valgan exactamente el nominal. La opción se valúa con Black-Scholes y se comprueba con un árbol binomial CRR, en su versión europea y americana.
+
+```{r funciones}
+bs_call <- function(S, K, T, r, q, s) {
+  d1 <- (log(S / K) + (r - q + s^2 / 2) * T) / (s * sqrt(T)); d2 <- d1 - s * sqrt(T)
+  S * exp(-q * T) * pnorm(d1) - K * exp(-r * T) * pnorm(d2)
+}
+bs_greeks <- function(S, K, T, r, q, s) {
+  d1 <- (log(S / K) + (r - q + s^2 / 2) * T) / (s * sqrt(T))
+  c(delta = exp(-q * T) * pnorm(d1),
+    gamma = exp(-q * T) * dnorm(d1) / (S * s * sqrt(T)),
+    vega  = S * exp(-q * T) * dnorm(d1) * sqrt(T) / 100)
+}
+crr_call <- function(S, K, T, r, q, s, N = 500, americana = TRUE) {
+  dt <- T / N; u <- exp(s * sqrt(dt)); d <- 1 / u; p <- (exp((r - q) * dt) - d) / (u - d)
+  V <- pmax(S * u^(0:N) * d^(N:0) - K, 0)
+  for (i in (N - 1):0) {
+    V <- exp(-r * dt) * (p * V[2:(i + 2)] + (1 - p) * V[1:(i + 1)])
+    if (americana) V <- pmax(V, S * u^(0:i) * d^(i:0) - K)
+  }
+  V[1]
+}
+bono_recto <- function(cupon, y, T, F = 1000) sum(cupon * F / (1 + y)^(1:T)) + F / (1 + y)^T
+```
+
+```{r valuacion}
+K_conv   <- S0 * (1 + prima_conv)
+ratio    <- nominal_bono / K_conv
+call_bs  <- bs_call(S0, K_conv, plazo, rf, q, sigma)
+call_eur <- crr_call(S0, K_conv, plazo, rf, q, sigma, americana = FALSE)
+call_am  <- crr_call(S0, K_conv, plazo, rf, q, sigma, americana = TRUE)
+valor_opcion <- ratio * call_bs
+cupon_justo  <- uniroot(function(c) bono_recto(c, y_recta, plazo) + valor_opcion - nominal_bono, c(-0.05, 0.2))$root
+ahorro_anual <- (y_recta - cupon_justo) * monto_emision
+
+knitr::kable(data.frame(
+  Concepto = c("Precio de conversión", "Acciones por bono", "Call europea (Black-Scholes)", "Call europea (árbol CRR, N = 500)",
+               "Call americana (árbol CRR, N = 500)", "Valor de la opción por bono", "Bono recto (sin opción) al cupón justo",
+               "Cupón justo del convertible", "Rendimiento de la deuda recta", "Ahorro anual de intereses (millones USD)"),
+  Valor = c(num(K_conv, 2), num(ratio, 3), num(call_bs, 2), num(call_eur, 2), num(call_am, 2), num(valor_opcion, 2),
+            num(bono_recto(cupon_justo, y_recta, plazo), 2), pct(100 * cupon_justo, 2), pct(100 * y_recta, 2),
+            num(ahorro_anual / 1e6, 1))), align = "lr", row.names = FALSE)
+```
+
+**Lectura.** Con una prima de conversión de 25 %, el cupón justo del convertible es de `r pct(100 * cupon_justo, 2)`, contra `r pct(100 * y_recta, 2)` que pagaría Coca-Cola en deuda recta a cinco años. La diferencia representa un ahorro de unos `r num(ahorro_anual / 1e6, 1)` millones de dólares al año sobre una emisión de `r num(monto_emision / 1e9, 1)` mil millones, equivalente a `r pct(100 * ahorro_anual / monto_emision, 1)` de la emisión por año. En proporción es algo menor que el de Molson Coors (≈ 15 millones sobre 575, 2.6 %), porque Coca-Cola ya se financia muy barato: su diferencial de crédito es de apenas 34.6 pb. Para dimensionarlo: el ahorro equivale a cerca del `r pct(100 * ahorro_anual / 1653e6, 1)` de todo el gasto por intereses de Coca-Cola en 2025 (1,653 millones según Bloomberg FA). El ahorro no es gratis: el inversionista acepta un cupón menor porque recibe una opción que vale `r num(valor_opcion, 2)` dólares por bono, es decir, el `r pct(valor_opcion / 10, 1)` del nominal. La call americana vale casi lo mismo que la europea (`r num(call_am, 2)` contra `r num(call_eur, 2)`): con un dividendo de `r pct(100 * q, 2)` casi nunca conviene ejercer antes del vencimiento, así que Black-Scholes es una buena aproximación.
+
+### Árbol binomial: convergencia y primeros nodos
+
+```{r convergencia, fig.width=8, fig.height=3.6}
+Ns <- seq(10, 500, 10)
+conv <- sapply(Ns, function(n) crr_call(S0, K_conv, plazo, rf, q, sigma, N = n, americana = FALSE))
+par(mar = c(4.5, 4.5, 3, 1))
+plot(Ns, conv, type = "l", col = BERRY[2], lwd = 1.3, las = 1, xlab = "Número de pasos (N)", ylab = "Valor de la call",
+     main = "Convergencia del árbol binomial a Black-Scholes")
+abline(h = call_bs, lty = 2, col = BERRY[1], lwd = 2)
+legend("topright", c("Árbol CRR europeo", paste0("Black-Scholes = ", num(call_bs, 2))), col = BERRY[2:1], lty = c(1, 2), lwd = 2, bty = "n")
+```
+
+```{r arbol, fig.width=10, fig.height=5.8}
+N4 <- 4; dt4 <- plazo / N4; u <- exp(sigma * sqrt(dt4)); d <- 1 / u; p4 <- (exp((rf - q) * dt4) - d) / (u - d)
+Sn <- lapply(0:N4, function(i) S0 * u^(0:i) * d^(i:0))
+Vn <- vector("list", N4 + 1); Vn[[N4 + 1]] <- pmax(Sn[[N4 + 1]] - K_conv, 0); ejer <- vector("list", N4 + 1)
+for (i in N4:1) {
+  cont <- exp(-rf * dt4) * (p4 * Vn[[i + 1]][-1] + (1 - p4) * Vn[[i + 1]][-(i + 1)])
+  ej <- Sn[[i]] - K_conv; Vn[[i]] <- pmax(cont, ej); ejer[[i]] <- ej > cont
+}
+par(mar = c(3, 1, 3, 1))
+plot(NA, xlim = c(-0.4, N4 + 0.4), ylim = c(-N4 / 2 - 0.5, N4 / 2 + 0.5) * 1.6, axes = FALSE, xlab = "", ylab = "",
+     main = sprintf("Árbol CRR de 4 pasos (u = %.3f, d = %.3f, p = %.3f)", u, d, p4))
+for (i in 0:N4) for (j in 0:i) {
+  y <- (j - i / 2) * 1.6
+  if (i < N4) segments(i, y, i + 1, c(j, j + 1) - (i + 1) / 2, col = "grey80")
+}
+for (i in 0:N4) for (j in 0:i) {
+  y <- (j - i / 2) * 1.6
+  col <- if (i < N4 && isTRUE(ejer[[i + 1]][j + 1])) "#d9a441" else BERRY[1]
+  rect(i - 0.33, y - 0.32, i + 0.33, y + 0.32, col = "white", border = col, lwd = 2)
+  text(i, y + 0.12, paste0("S = ", num(Sn[[i + 1]][j + 1], 1)), cex = 0.75)
+  text(i, y - 0.14, paste0("C = ", num(Vn[[i + 1]][j + 1], 2)), cex = 0.75, col = BERRY[1])
+}
+axis(1, at = 0:N4, labels = paste(num((0:N4) * dt4, 2), "años"), tick = FALSE)
+cat("Nodos donde conviene ejercer antes:", sum(unlist(ejer), na.rm = TRUE), "\n")
+```
+
+**Lectura.** Con 500 pasos el árbol converge al valor de Black-Scholes. En ningún nodo conviene ejercer antes: con un dividendo de `r pct(100 * q, 2)` y una tasa de `r pct(100 * rf, 2)`, el valor del tiempo supera al dividendo que se deja de cobrar, así que la call americana vale casi lo mismo que la europea y Black-Scholes es una buena aproximación para el convertible.
+
+### Sensibilidad del cupón a la prima y a la volatilidad
+
+```{r sensibilidad, fig.width=8, fig.height=4.5}
+cupon_para <- function(prima, s) {
+  K <- S0 * (1 + prima); op <- (nominal_bono / K) * bs_call(S0, K, plazo, rf, q, s)
+  uniroot(function(c) bono_recto(c, y_recta, plazo) + op - nominal_bono, c(-0.05, 0.2))$root
+}
+primas <- seq(0.15, 0.40, 0.05); vols <- c(0.16, 0.18, 0.20, 0.22)
+malla <- sapply(vols, function(v) sapply(primas, cupon_para, s = v))
+par(mar = c(4.5, 4.5, 3, 1))
+matplot(100 * primas, 100 * malla, ylim = c(min(100 * malla), 100 * y_recta + 0.2), type = "l", lty = 1, lwd = 2, col = BERRY[1:4], las = 1,
+        xlab = "Prima de conversión (%)", ylab = "Cupón justo (%)", main = "Cupón justo según prima y volatilidad")
+abline(h = 100 * y_recta, lty = 2, col = "grey40")
+legend("bottomright", c(paste("Vol.", 100 * vols, "%"), "Deuda recta"), col = c(BERRY[1:4], "grey40"),
+       lty = c(1, 1, 1, 1, 2), lwd = 2, bty = "n", cex = 0.85)
+```
+
+```{r tabla-primas}
+knitr::kable(data.frame(`Prima de conversión` = paste0(100 * primas, " %"), `Precio de conversión` = num(S0 * (1 + primas), 2),
+                        `Cupón justo (vol. 20.2 %)` = pct(100 * sapply(primas, cupon_para, s = sigma), 2),
+                        `Ahorro anual vs. deuda recta (millones USD)` = num((y_recta - sapply(primas, cupon_para, s = sigma)) * monto_emision / 1e6, 1),
+                        check.names = FALSE), align = "rrrr", row.names = FALSE, caption = "¿Qué prima de conversión conviene?")
+```
+
+**¿Qué prima y qué cupón convienen?** Una prima baja da más ahorro de cupón, pero acerca la dilución; una prima alta la aleja, pero el ahorro casi desaparece. Proponemos 25 %, como Molson Coors: es el estándar del mercado para emisores de grado de inversión, mantiene un ahorro relevante y, con el call spread, la dilución efectiva solo empieza a partir de 60 %. Para la colocación proponemos un cupón de 2.75 %, apenas por encima del cupón justo, para asegurar la demanda de los inversionistas.
+
+**No hay almuerzo gratis.** Cada punto más de prima de conversión sube el cupón justo, porque la opción que recibe el inversionista vale menos. Y con más volatilidad la opción vale más, así que el cupón puede bajar. La volatilidad implícita de KO en Bloomberg (alrededor de 20 %) está en la parte media del rango de la gráfica.
+
+## 11. Call spread y prima efectiva
+
+Igual que Molson Coors, Coca-Cola compra calls con strike en el precio de conversión y vende warrants con strike de 60 % de prima. Así la dilución solo empieza cuando la acción supera ese techo.
+
+```{r callspread}
+K_techo  <- S0 * (1 + prima_techo)
+acciones_totales <- ratio * monto_emision / nominal_bono
+c_compra <- bs_call(S0, K_conv, plazo, rf, q, sigma)
+c_venta  <- bs_call(S0, K_techo, plazo, rf, q, sigma_w)
+costo_neto <- (c_compra - c_venta) * acciones_totales
+
+knitr::kable(data.frame(
+  Concepto = c("Acciones subyacentes", "Strike de las calls compradas", "Strike de los warrants vendidos",
+               "Costo de las calls (millones USD)", "Ingreso por los warrants (millones USD)", "Costo neto (millones USD)",
+               "Costo neto / emisión", "Años de ahorro de cupón para pagarlo",
+               "Molson Coors: costo neto / emisión"),
+  Valor = c(num(acciones_totales / 1e6, 1), num(K_conv, 2), num(K_techo, 2), num(c_compra * acciones_totales / 1e6, 1),
+            num(c_venta * acciones_totales / 1e6, 1), num(costo_neto / 1e6, 1), pct(100 * costo_neto / monto_emision, 2),
+            num(costo_neto / ahorro_anual, 1), pct(100 * 49.7 / 575, 2))), align = "lr", row.names = FALSE)
+```
+
+```{r payoff-cs, fig.width=8, fig.height=4.2}
+ST <- seq(0.6, 2.2, length.out = 200) * S0
+sin_cs <- pmax(ST - K_conv, 0) * acciones_totales / 1e6
+con_cs <- pmax(ST - K_techo, 0) * acciones_totales / 1e6
+par(mar = c(4.5, 4.5, 3, 1))
+plot(ST, sin_cs, type = "l", lwd = 2.5, col = BERRY[1], las = 1, xlab = "Precio de KO al vencimiento (USD)",
+     ylab = "Millones USD", main = "Costo económico de la conversión")
+lines(ST, con_cs, lwd = 2.5, lty = 2, col = BERRY[2])
+abline(v = c(K_conv, K_techo), lty = 3, col = "grey50")
+legend("topleft", c("Sin call spread", "Con call spread"), col = BERRY[1:2], lty = c(1, 2), lwd = 2, bty = "n")
+```
+
+**Lectura.** Subir la prima efectiva de 25 % a 60 % cuesta `r num(costo_neto / 1e6, 1)` millones de dólares, el `r pct(100 * costo_neto / monto_emision, 2)` de la emisión, por debajo de lo que pagó Molson Coors en proporción (8.64 %). Cada pierna se valúa con la volatilidad implícita de su propio strike en Bloomberg: `r pct(100 * sigma)` para las calls a 120 y `r pct(100 * sigma_w)` para los warrants. Como la volatilidad baja en los strikes altos, el warrant vale un poco menos y Coca-Cola cobra menos por venderlo. Con el ahorro anual de cupón, el call spread se paga en `r num(costo_neto / ahorro_anual, 1)` años, dentro del plazo de cinco años del bono. A partir de ahí, la empresa conserva el cupón bajo y solo emite acciones nuevas si KO supera `r num(K_techo, 2)` dólares.
+
+## 12. Cobertura de tasa: T-lock
+
+Mientras se coloca la emisión, una subida en la tasa del Tesoro encarece el financiamiento. El T-lock fija la tasa hoy: si la tasa sube, paga la diferencia; si baja, Coca-Cola paga, pero también se financia más barato.
+
+```{r tlock}
+duracion_mod <- dv01_10mm / 10e6 * 10000   # Duración modificada implícita en el DV01 de Bloomberg SWPM (≈ 4.46)
+cambios_pb <- c(-50, -25, 0, 25, 50, 100)
+pago <- monto_emision * duracion_mod * cambios_pb / 10000
+knitr::kable(data.frame(`Cambio en la tasa (pb)` = cambios_pb,
+                        `Pago del T-lock (millones USD)` = num(pago / 1e6, 1),
+                        `Mayor costo de la emisión sin cobertura (millones USD)` = num(pago / 1e6, 1),
+                        `Resultado neto` = num(0, 1), check.names = FALSE), align = "rrrr", row.names = FALSE)
+```
+
+**Lectura.** El resultado neto es cero en todos los escenarios: lo que el T-lock gana o pierde compensa el cambio en el costo de la emisión. El riesgo es real: en el último año el Tesoro a 5 años se movió entre 3.50 % y 5.09 % (Bloomberg USGG5YR). Con un DV01 de `r num(monto_emision * duracion_mod / 10000 / 1e6, 2)` millones por punto base, un alza de 25 pb durante la colocación encarecería la emisión en unos `r num(monto_emision * duracion_mod * 25 / 10000 / 1e6, 1)` millones, que el T-lock compensa.
+
+**T-lock o swap con inicio diferido.** El swap SOFR a 5 años (`r pct(100 * swap5, 2)`) está `r num((rf - swap5) * 10000, 0)` pb por debajo del Tesoro, un diferencial swap negativo que hoy es normal en el mercado de EUA. Por eso fijar la tasa con un swap de inicio diferido sería un poco más barato, y además deja abierta la opción de pasar después parte de la deuda a tasa flotante. Recomendamos el T-lock para la emisión puntual, igual que Molson Coors, y dejar el swap como alternativa si la empresa quiere mezclar tasa fija y flotante.
+
+## 13. Griegas, escenarios y Monte Carlo
+
+```{r griegas}
+g_compra <- bs_greeks(S0, K_conv,  plazo, rf, q, sigma) * acciones_totales
+g_venta  <- bs_greeks(S0, K_techo, plazo, rf, q, sigma_w) * acciones_totales
+knitr::kable(data.frame(
+  Griega = c("Delta (acciones)", "Gamma (acciones por dólar)", "Vega (USD por punto de volatilidad)"),
+  `Calls compradas` = num(g_compra), `Warrants vendidos` = num(g_venta), `Call spread neto` = num(g_compra - g_venta),
+  check.names = FALSE), align = "lrrr", row.names = FALSE)
+```
+
+```{r escenarios}
+esc <- c(-0.30, -0.15, 0, 0.15, 0.30, 0.60, 0.80)
+valor_cs <- sapply(esc, function(x) (bs_call(S0 * (1 + x), K_conv, plazo - 1, rf, q, sigma) -
+                                     bs_call(S0 * (1 + x), K_techo, plazo - 1, rf, q, sigma_w)) * acciones_totales)
+knitr::kable(data.frame(`Movimiento de KO` = paste0(ifelse(esc > 0, "+", ""), 100 * esc, " %"), `Precio de KO` = num(S0 * (1 + esc), 2),
+                        `Valor del call spread en un año (millones USD)` = num(valor_cs / 1e6, 1),
+                        `Ganancia o pérdida vs. costo inicial (millones USD)` = num((valor_cs - costo_neto) / 1e6, 1),
+                        check.names = FALSE), align = "rrrr", row.names = FALSE)
+```
+
+
+```{r griegas-curvas, fig.width=11, fig.height=3.6}
+Sg <- seq(60, 200, length.out = 200)
+gneto <- t(sapply(Sg, function(s) (bs_greeks(s, K_conv, plazo, rf, q, sigma) - bs_greeks(s, K_techo, plazo, rf, q, sigma_w)) * acciones_totales))
+par(mfrow = c(1, 3), mar = c(4.5, 4.5, 3, 1))
+plot(Sg, gneto[, "delta"] / 1e6, type = "l", lwd = 2, col = BERRY[1], las = 1, xlab = "Precio de KO", ylab = "Millones de acciones", main = "Delta del call spread"); abline(v = S0, lty = 3)
+plot(Sg, gneto[, "gamma"] / 1e3, type = "l", lwd = 2, col = BERRY[2], las = 1, xlab = "Precio de KO", ylab = "Miles de acciones por dólar", main = "Gamma del call spread"); abline(v = S0, lty = 3); abline(h = 0, col = "grey70")
+plot(Sg, gneto[, "vega"] / 1e6, type = "l", lwd = 2, col = BERRY[3], las = 1, xlab = "Precio de KO", ylab = "Millones USD por punto", main = "Vega del call spread"); abline(v = S0, lty = 3); abline(h = 0, col = "grey70")
+```
+
+```{r mapa-calor, fig.width=9, fig.height=4.2}
+precios_h <- S0 * (1 + c(-0.30, -0.15, 0, 0.15, 0.30, 0.45, 0.60)); vols_h <- c(0.14, 0.17, 0.20, 0.23, 0.26)
+H <- sapply(precios_h, function(s) sapply(vols_h, function(v)
+  (bs_call(s, K_conv, plazo - 1, rf, q, v) - bs_call(s, K_techo, plazo - 1, rf, q, v - (sigma - sigma_w))) * acciones_totales / 1e6))
+par(mar = c(4.5, 5, 3, 1))
+image(1:length(precios_h), 1:length(vols_h), t(H), col = colorRampPalette(c("#f7e6eb", BERRY[1]))(30), axes = FALSE,
+      xlab = "Precio de KO en un año", ylab = "Volatilidad implícita", main = "Valor del call spread en un año (millones USD)")
+axis(1, at = 1:length(precios_h), labels = num(precios_h, 0)); axis(2, at = 1:length(vols_h), labels = pct(100 * vols_h, 0), las = 1)
+for (i in seq_along(vols_h)) for (j in seq_along(precios_h)) text(j, i, num(H[i, j], 0), cex = 0.8, col = ifelse(H[i, j] > max(H) * 0.6, "white", "black"))
+```
+
+**Lectura.** La delta del call spread es positiva en todo el rango: gana valor cuando KO sube, justo cuando la conversión le cuesta más a la empresa. La gamma y la vega son positivas al precio actual, pero se vuelven negativas cuando KO se acerca al techo, porque ahí pesa más el warrant vendido. El mapa de calor muestra que el valor depende sobre todo del precio y, en menor medida, de la volatilidad. Si KO cae 30 %, el call spread pierde casi todo su valor, pero en ese escenario los bonos tampoco se convierten y no hay dilución que cubrir: la pérdida máxima es la prima pagada.
+
+### Monte Carlo: probabilidad de conversión y costo de la dilución
+
+Se simulan 20,000 trayectorias de KO a cinco años con movimiento browniano geométrico neutral al riesgo. Para cada una se calcula si el bono se convierte y cuánto le cuesta a Coca-Cola la dilución, con y sin call spread.
+
+```{r montecarlo}
+set.seed(2026); n_sim <- 20000
+ST_mc <- S0 * exp((rf - q - 0.5 * sigma^2) * plazo + sigma * sqrt(plazo) * rnorm(n_sim))
+costo_sin <- pmax(ST_mc - K_conv, 0) * acciones_totales; costo_con <- pmax(ST_mc - K_techo, 0) * acciones_totales
+desc <- exp(-rf * plazo)
+knitr::kable(data.frame(
+  Concepto = c("Probabilidad de conversión (S > precio de conversión)", "Probabilidad de superar el techo del call spread",
+               "VP del costo de dilución sin call spread (millones USD)", "VP del costo de dilución con call spread (millones USD)",
+               "VP del call spread por Monte Carlo (millones USD)", "Costo del call spread por Black-Scholes (millones USD)",
+               "Costo al vencimiento, percentil 95, sin call spread (millones USD)", "Costo al vencimiento, percentil 95, con call spread (millones USD)"),
+  Valor = c(pct(100 * mean(ST_mc > K_conv)), pct(100 * mean(ST_mc > K_techo)), num(desc * mean(costo_sin) / 1e6, 1),
+            num(desc * mean(costo_con) / 1e6, 1), num(desc * mean(costo_sin - costo_con) / 1e6, 1), num(costo_neto / 1e6, 1),
+            num(quantile(costo_sin, 0.95) / 1e6, 0), num(quantile(costo_con, 0.95) / 1e6, 0))), align = "lr", row.names = FALSE)
+```
+
+```{r mc-graf, fig.width=11, fig.height=4}
+par(mfrow = c(1, 2), mar = c(4.5, 4.5, 3, 1))
+tt <- seq(0, plazo, length.out = 61); set.seed(7)
+tray <- replicate(60, S0 * exp(cumsum(c(0, (rf - q - 0.5 * sigma^2) * diff(tt) + sigma * sqrt(diff(tt)) * rnorm(60)))))
+matplot(tt, tray, type = "l", lty = 1, col = adjustcolor(BERRY[3], 0.6), las = 1, xlab = "Años", ylab = "USD", main = "Trayectorias simuladas de KO")
+abline(h = c(K_conv, K_techo), lty = 2, lwd = 2, col = c(BERRY[1], "#d9a441"))
+legend("topleft", c("Conversión", "Techo"), lty = 2, lwd = 2, col = c(BERRY[1], "#d9a441"), bty = "n")
+hist(ST_mc, breaks = 80, col = BERRY[2], border = NA, las = 1, xlab = "USD", ylab = "Frecuencia", main = "Precio de KO a 5 años", xlim = c(0, 450))
+abline(v = c(K_conv, K_techo), lty = 2, lwd = 2, col = c(BERRY[1], "#d9a441"))
+```
+
+**Lectura.** El Monte Carlo da un valor del call spread muy cercano al de Black-Scholes; la pequeña diferencia viene de que la simulación usa una sola volatilidad para las dos piernas. La probabilidad de que KO termine por encima del precio de conversión es de `r pct(100 * mean(ST_mc > K_conv), 0)` y por encima del techo, de `r pct(100 * mean(ST_mc > K_techo), 0)`. En el 5 % de los peores escenarios para la empresa, el call spread reduce el costo de la dilución de `r num(quantile(costo_sin, 0.95) / 1e6, 0)` a `r num(quantile(costo_con, 0.95) / 1e6, 0)` millones: ese es el seguro que compra Coca-Cola, igual que Molson Coors.
+
+
+## 14. Implementación en Investopedia
+
+Investopedia no permite operar futuros, swaps ni vender opciones, así que las coberturas se replicaron con ETFs y opciones compradas: acciones de KO con un put (protective put) para el riesgo de la acción, un put de FXE para el tipo de cambio, un put de TLT para la tasa y una call de USO para el costo de la energía. Las posiciones se abrieron el 6 de noviembre y se cerraron el 9 de noviembre de 2026.
+
+```{r investopedia}
+ops <- read.csv("datos/operaciones_investopedia.csv", stringsAsFactors = FALSE)
+ops$pnl  <- (ops$precio_salida - ops$precio_entrada) * ops$cantidad * ops$multiplicador
+ops$rend <- 100 * (ops$precio_salida / ops$precio_entrada - 1)
+fmt <- function(x, d) ifelse(is.na(x), "pendiente", num(x, d))
+tabla_ops <- function(g) {
+  x <- ops[ops$grupo == g, ]
+  data.frame(Instrumento = trimws(paste(x$instrumento, ifelse(x$tipo == "Accion", "", paste(x$tipo, x$strike)))),
+             Cantidad = x$cantidad, Entrada = fmt(x$precio_entrada, 2), Salida = fmt(x$precio_salida, 2),
+             `P&L (USD)` = fmt(x$pnl, 0), `Rendimiento (%)` = fmt(x$rend, 1), Riesgo = x$riesgo_cubierto, check.names = FALSE)
+}
+knitr::kable(tabla_ops("Cobertura KO"), align = "lrrrrrl", row.names = FALSE, caption = "Portafolio de cobertura de Coca-Cola, 6 al 9 de noviembre")
+knitr::kable(tabla_ops("Cerrada"), align = "lrrrrrl", row.names = FALSE, caption = "Posiciones de la tarea 6 y de septiembre cerradas el 6 y el 9 de noviembre")
+```
+
+```{r pnl-graf, fig.width=8, fig.height=3.8}
+cob <- ops[ops$grupo == "Cobertura KO", ]
+etiq <- trimws(paste(cob$instrumento, ifelse(cob$tipo == "Accion", "", paste(cob$tipo, cob$strike))))
+par(mar = c(4, 9, 3, 1))
+barplot(rev(cob$pnl), names.arg = rev(etiq), horiz = TRUE, las = 1, col = ifelse(rev(cob$pnl) >= 0, BERRY[1], BERRY[3]),
+        border = NA, main = "P&L de la cobertura por posición (USD)")
+abline(v = 0, col = "grey40")
+pnl_cob <- sum(cob$pnl); prima_pagada <- sum(cob$precio_entrada[cob$tipo != "Accion"] * cob$cantidad[cob$tipo != "Accion"] * 100)
+pp <- sum(cob$pnl[cob$instrumento == "KO"])
+```
+
+**Lectura.** Todas las posiciones de cobertura terminaron con pérdida, por un total de `r num(-pnl_cob, 0)` dólares, el `r pct(100 * -pnl_cob / (sum(cob$precio_entrada * cob$cantidad * cob$multiplicador)), 1)` del capital invertido. El protective put de KO perdió `r num(-pp, 0)` dólares: la acción casi no se movió (de 95.99 a 95.83), así que el put no tuvo nada que compensar y perdió valor por el paso del tiempo. FXE y TLT bajaron porque ni el euro ni los bonos se movieron lo suficiente en contra para que los puts ganaran. La call de USO explica tres cuartas partes de la pérdida: el ETF de petróleo bajó y la opción perdió 31 %. Para Coca-Cola, un petróleo más barato significa energía y transporte más baratos, así que en la empresa real esa pérdida se compensaría con menores costos operativos.
+
+### Por qué la cobertura perdió y qué haríamos diferente
+
+**Ningún riesgo se materializó.** Una cobertura con opciones compradas es un seguro: se paga una prima de `r num(prima_pagada, 0)` dólares y solo se recupera si el precio se mueve en contra. En tres días KO, el euro, los bonos y el petróleo se movieron poco o a favor de la empresa, así que el resultado fue la prima perdida. Ese es el escenario más probable en un plazo tan corto, y no significa que la cobertura estuviera mal planteada: su objetivo es reducir la variabilidad, no ganar dinero.
+
+**El plazo no coincidió con la exposición.** Las opciones vencen el 18 de diciembre, pero se mantuvieron solo tres días. En ese lapso pesan sobre todo el theta (la pérdida diaria de valor de tiempo) y el diferencial entre compra y venta: se compró al ask y se vendió al bid, lo que en opciones baratas como FXE es una fracción grande del precio. Una tesorería real cubre el horizonte completo del riesgo, por ejemplo los doce meses hasta los vencimientos de 2027.
+
+**El simulador obligó a usar la estructura más cara.** Investopedia solo permite comprar opciones. Una tesorería usaría instrumentos sin prima o casi sin prima: forwards o futuros de divisas y de commodities, un collar (comprar un put y vender una call para financiarlo), o un swap de tasa. Con esas estructuras el costo inicial es cercano a cero y el resultado depende solo del movimiento del subyacente.
+
+**Lo que haríamos diferente.** Primero, medir la cobertura contra la exposición que protege y no por su P&L aislado: el resultado correcto es la variación de la posición cubierta contra la no cubierta. Segundo, dimensionar cada cobertura con una razón de cobertura (delta o beta frente a la exposición real de KO), en lugar de diez contratos iguales para todas. Tercero, usar strikes fuera del dinero o spreads de puts para abaratar la prima, y comprar cuando la volatilidad implícita esté baja. Cuarto, sostener las posiciones el horizonte completo o, si la evaluación es de pocos días, preferir futuros y forwards, que no pierden valor por el tiempo.
+
+## 15. Riesgos de la estrategia
+
+**Supuestos del modelo.** Black-Scholes y el árbol binomial suponen una volatilidad constante durante cinco años, y la tomamos de las opciones listadas más largas (enero de 2029, poco más de dos años), porque no hay opciones listadas a cinco años. Si la volatilidad real de KO sube, la opción entregada vale más y el cupón justo debería ser menor; la gráfica de sensibilidad muestra cuánto. El riesgo de crédito se incluye solo como un diferencial fijo (el CDS a cinco años), sin modelar un posible deterioro de la calificación.
+
+**Riesgo de contraparte.** El call spread se contrata con bancos. Si el banco que vendió las calls no puede pagar cuando KO sube, Coca-Cola queda expuesta a la dilución que quería cubrir. Conviene repartir el call spread entre varias contrapartes con buena calificación.
+
+**Dilución y contabilidad.** Si KO supera el techo de `r num(K_techo, 2)` dólares, la conversión diluye a los accionistas. Además, el convertible puede requerir separar el componente de capital en los estados financieros y el call spread puede tener tratamiento contable propio, lo que hace la estructura más compleja de explicar a inversionistas.
+
+**Ejecución y simulador.** Las coberturas operativas (divisas, tasas y commodities) se replicaron con ETFs y opciones compradas por las restricciones de Investopedia, que no permite operar futuros, swaps ni vender opciones. Los resultados del simulador ilustran el mecanismo, pero no miden la eficacia de una cobertura corporativa real.
+
+## 16. Recomendación final
+
+**Recomendamos emitir el convertible con call spread y T-lock.** Con los parámetros actuales, Coca-Cola puede refinanciar `r num(monto_emision / 1e9, 1)` mil millones a un cupón de `r pct(100 * cupon_justo, 2)` en lugar de `r pct(100 * y_recta, 2)`, un ahorro de unos `r num(ahorro_anual / 1e6, 1)` millones al año. El call spread cuesta `r num(costo_neto / 1e6, 1)` millones y se paga con `r num(costo_neto / ahorro_anual, 1)` años de ese ahorro, mientras eleva la prima efectiva a 60 % y deja la dilución solo para escenarios en que la acción sube más de 60 %. El T-lock fija el costo durante la colocación.
+
+**No hay almuerzo gratis.** El ahorro existe porque Coca-Cola entrega una opción sobre su acción y paga por limitar su efecto. Si la volatilidad implícita baja del `r pct(100 * sigma)` que hoy marca Bloomberg, la opción vale menos, el cupón justo sube y el ahorro se reduce; en ese caso la alternativa sería deuda recta con un swap. Antes de emitir, la decisión debe confirmarse con la volatilidad del día de la colocación.
+
+**Para las coberturas operativas**, la lección del simulador es usar instrumentos sin prima (forwards, futuros y collars) para divisas y commodities, dimensionados contra la exposición real y sostenidos durante todo el horizonte del riesgo.
+
+---
+
+Fuentes: LSEG Workspace (SOV, PEERS, Company Fundamentals, Debt Structure, Issuer Ratings, CDS Overview y StarMine), 3 de noviembre de 2026; Bloomberg (OMON, HIVG, SWPM); The Coca-Cola Company, comunicado de resultados del 3T 2026 (Form 8-K) y Form 10-K; Investopedia Simulator; Yahoo Finance vía `quantmod`. Material académico; no es una recomendación de inversión.
