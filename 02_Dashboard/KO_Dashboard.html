@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>Coca-Cola Cobertura KO</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<style>
+:root{--crema:#f3f6fa;--papel:#ffffff;--tinta:#1b2533;--suave:#5b6b80;--berry:#1f4e8c;--berry2:#4a86c8;--rosa:#c9dbf0;--linea:#dbe3ee;--ok:#2f6f5e;--warn:#b5651d;--hdr:#1f4e8c;--tagok:#dcefe8;--tagpend:#f6e3cf}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--crema:#0f1620;--papel:#172131;--tinta:#e6edf6;--suave:#9fb0c6;--berry:#6fa8e6;--berry2:#9cc3ef;--rosa:#23406a;--linea:#2a3a50;--ok:#7cc4ad;--warn:#e3a46a;--hdr:#12305a;--tagok:#1f3a33;--tagpend:#3e2c1c;color-scheme:dark}}
+:root[data-theme="dark"]{--crema:#0f1620;--papel:#172131;--tinta:#e6edf6;--suave:#9fb0c6;--berry:#6fa8e6;--berry2:#9cc3ef;--rosa:#23406a;--linea:#2a3a50;--ok:#7cc4ad;--warn:#e3a46a;--hdr:#12305a;--tagok:#1f3a33;--tagpend:#3e2c1c;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--crema);color:var(--tinta);font-family:"Source Sans 3",system-ui,sans-serif;line-height:1.5}
+header{background:var(--hdr);color:#fff;padding-block:32px 26px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header .eyebrow{font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+header h1{font-family:"Source Serif 4",serif;font-size:clamp(28px,4vw,42px);margin:6px 0 4px;font-weight:700}
+header p{margin:0;opacity:.92}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--papel)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);background:var(--papel);border-bottom:1px solid var(--linea);z-index:5}
+nav .wrap{display:flex;gap:18px;overflow-x:auto;padding-block:10px;font-size:14px}
+nav a{color:var(--berry);text-decoration:none;white-space:nowrap;font-weight:600}
+section{padding:30px 0 6px}
+h2{font-family:"Source Serif 4",serif;font-size:26px;margin:0 0 4px;color:var(--berry)}
+h3{font-family:"Source Serif 4",serif;font-size:19px;margin:18px 0 8px}
+.lead{color:var(--suave);margin:0 0 16px;max-width:900px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--papel);border:1px solid var(--linea);border-radius:10px;padding:14px}
+.kpi .l{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--suave)}
+.kpi .v{font-family:"Source Serif 4",serif;font-size:26px;font-weight:700;margin-top:2px}
+.kpi .n{font-size:12px;color:var(--suave)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid2>*{min-width:0}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--papel);border:1px solid var(--linea);border-radius:10px;padding:16px}
+.chart{height:340px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--suave)}
+td.num,th.num{text-align:right}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600}
+.tag.ok{background:var(--tagok);color:var(--ok)}
+.tag.pend{background:var(--tagpend);color:var(--warn)}
+.prose p{margin:0 0 12px;max-width:950px}
+.prose b{color:var(--berry)}
+.note{font-size:13px;color:var(--suave)}
+.scroll{overflow-x:auto}
+footer{margin-top:36px;padding:22px 0 40px;border-top:1px solid var(--linea);font-size:13px;color:var(--suave)}
+.ctrl{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin:4px 0 10px}
+.ctrl label{font-size:13px;color:var(--suave);display:flex;flex-direction:column;gap:4px;min-width:200px;flex:1}
+.ctrl input[type=range]{accent-color:var(--berry);width:100%}
+.ctrl b{color:var(--tinta);font-size:14px}
+.btn{background:var(--berry);color:#fff;border:0;border-radius:6px;padding:7px 16px;font:600 14px "Source Sans 3",sans-serif;cursor:pointer}
+.btn.sec{background:transparent;color:var(--berry);border:1px solid var(--berry)}
+</style>
+
+
+</head>
+<body>
+<header><div class="wrap">
+  <div class="eyebrow">Derivados y Administración de Riesgos Corporativos · EGADE · Proyecto final</div>
+  <h1>The Coca-Cola Company (NYSE: KO)</h1>
+  <p>Cobertura de tesorería y financiamiento con opciones, futuros, swaps y bonos convertibles, con el caso Molson Coors (2007) como modelo.</p>
+  <p class="note" style="color:#d6e4f5;margin-top:8px">Equipo: Carmen Cázares · Edgar Jiménez · Diana Lozada · Prof. Dr. Raymundo Díaz Robles · Datos de LSEG Workspace (3-nov-2026), Bloomberg e Investopedia (9-nov-2026)</p>
+</div></header>
+
+<nav><div class="wrap">
+  <a href="#overview">1. Overview</a><a href="#analisis">2. Análisis</a><a href="#deuda">3. Deuda</a><a href="#vencimientos">4. Vencimientos</a>
+  <a href="#calificacion">5. Calificación</a><a href="#riesgos">6. Riesgos</a><a href="#propuesta">7. Propuesta</a><a href="#valuacion">8. Valuación</a><a href="#callspread">9. Call spread</a><a href="#griegas">10. Escenarios</a><a href="#simulador">11. Investopedia</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="overview">
+  <h2>1. Overview de la empresa</h2>
+  <p class="lead">Coca-Cola vende concentrados, jarabes y bebidas terminadas en más de 200 países (Coca-Cola, Sprite, Fanta, Dasani, Powerade, Costa, Minute Maid, fairlife). Sus segmentos son EMEA, Latinoamérica, Norteamérica, Asia Pacífico e Inversiones en Embotelladoras. El consenso de analistas es de compra (21 de 27 recomiendan Buy o Strong Buy).</p>
+  <div class="kpis" id="kpis-mercado"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Resultados anuales (miles de millones de USD)</h3><div id="ch-anual" class="chart"></div>
+      <p class="note">LSEG Company Fundamentals FY2021–FY2025, exportado en MXN y convertido a USD con el tipo de cambio del propio export.</p></div>
+    <div class="card"><h3>Ingresos por segmento, 2025</h3><div id="ch-seg" class="chart"></div>
+      <p class="note">Alrededor del 59 % de los ingresos viene de fuera de Norteamérica.</p></div>
+  </div>
+  <h3>Año en curso: primeros nueve meses de 2026</h3>
+  <div class="kpis" id="kpis-9m"></div>
+  <p class="note">Fuente: comunicado de resultados del 3T 2026 (Form 8-K). La empresa guía crecimiento orgánico de ingresos de al menos 5 % y flujo libre de al menos 13,000 millones para 2026.</p>
+</section>
+
+<section id="analisis">
+  <h2>2. Rentabilidad y comparación con pares</h2>
+  <div class="grid2">
+    <div class="card"><h3>Rentabilidad (%)</h3><div id="ch-rent" class="chart"></div></div>
+    <div class="card"><h3>Apalancamiento contra rentabilidad (tamaño = P/E)</h3><div id="ch-peers" class="chart"></div></div>
+  </div>
+  <div class="card scroll" style="margin-top:16px"><table id="tb-peers"><tr><th>Ticker</th><th>Empresa</th><th class="num">P/E (LTM)</th><th class="num">ROE (%)</th><th class="num">D/E (%)</th></tr></table>
+    <p class="note">Fuente: LSEG PEERS, 3 de noviembre de 2026.</p></div>
+  <div class="prose" style="margin-top:14px">
+    <p><b>Lectura.</b> Coca-Cola tiene el ROE más alto del grupo (43 %) con un apalancamiento moderado: su D/E de 111 % es menos de la mitad que el de PepsiCo o Nestlé. El mercado le paga un múltiplo alto (P/E de 27.9x contra 17.3x de PepsiCo) por la estabilidad de su flujo. Una acción con beta baja y P/E alto hace que la opción de conversión sea relativamente barata, y emitir un convertible no debería presionar la calificación.</p>
+  </div>
+</section>
+
+<section id="deuda">
+  <h2>3. Estructura de deuda</h2>
+  <p class="lead">Coca-Cola tiene 48 bonos vigentes por 41.9 mil millones de dólares en USD, EUR y CHF, con un cupón promedio de apenas 2.46 % y un plazo promedio de 11.7 años, porque la mayor parte se emitió con tasas bajas entre 2020 y 2021.</p>
+  <div class="kpis" id="kpis-deuda"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Bonos por moneda</h3><div id="ch-moneda" class="chart"></div></div>
+    <div class="card"><h3>Deuda en balance: dic-2025 → oct-2026 (millones de USD)</h3><div id="ch-cambio" class="chart"></div></div>
+  </div>
+  <div class="prose" style="margin-top:14px">
+    <p><b>Lectura.</b> El 66 % de los bonos está en dólares, el 32 % en euros (cupón promedio de 1.28 %) y el 2 % en francos suizos. Esto crea una cobertura natural parcial frente a sus ingresos en Europa, pero también exposición cambiaria en el principal. Con cobertura de intereses de 9.1x y deuda neta/EBITDA de 1.85x hay holgura amplia para emitir. Entre diciembre y octubre la empresa pagó casi todo su papel comercial y la porción que vence en doce meses subió a 4.9 mil millones.</p>
+    <p><b>Validación con Bloomberg.</b> DDIS reporta 42.5 mil millones en 53 emisiones, con el mismo cupón promedio (2.46 %) y un plazo promedio de 11.5 años. La diferencia con LSEG son notas a tasa flotante; con ellas, 2027 es el año de mayores vencimientos (≈ 5.3 mil millones).</p>
+  </div>
+</section>
+
+<section id="vencimientos">
+  <h2>4. Calendario de vencimientos</h2>
+  <div class="card"><h3>Perfil de vencimientos por moneda (miles de millones de USD)</h3><div id="ch-venc" class="chart" style="height:360px"></div></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Cupón contra vencimiento (tamaño = monto)</h3><div id="ch-cupon" class="chart"></div></div>
+    <div class="card scroll"><h3>Próximos vencimientos 2026–2028: la deuda a refinanciar</h3><table id="tb-prox"><tr><th>Vencimiento</th><th>Moneda</th><th class="num">Cupón</th><th class="num">Monto (USD M)</th></tr></table></div>
+  </div>
+  <div class="prose" style="margin-top:14px">
+    <p><b>Lectura.</b> Entre noviembre de 2026 y 2028 vencen 7.7 mil millones de dólares, en su mayoría con cupones de 1.0 % a 3.4 %. Refinanciarlos hoy con deuda recta costaría bastante más que su cupón actual. Es el mismo problema que en 2007 resolvió Molson Coors con un convertible.</p>
+  </div>
+</section>
+
+<section id="calificacion">
+  <h2>5. Calificación crediticia y riesgo de crédito</h2>
+  <div class="kpis" id="kpis-cred"></div>
+  <div class="card scroll" style="margin-top:16px">
+    <table>
+      <tr><th>Agencia</th><th>Tipo</th><th>Calificación</th><th>Desde</th><th>Perspectiva</th></tr>
+      <tr><td>S&amp;P</td><td>Largo plazo emisor / senior no garantizado</td><td><b>A+</b></td><td>26-abr-2018</td><td>Estable</td></tr>
+      <tr><td>S&amp;P</td><td>Corto plazo / papel comercial</td><td>A-1</td><td>26-abr-2018</td><td>—</td></tr>
+      <tr><td>Moody's</td><td>Senior no garantizado</td><td><b>A1</b></td><td>20-nov-2018</td><td>Estable</td></tr>
+      <tr><td>Moody's</td><td>Corto plazo / papel comercial</td><td>P-1</td><td>06-jun-2023</td><td>Estable</td></tr>
+      <tr><td>Fitch</td><td>Largo plazo (IDR)</td><td>WD (retirada)</td><td>15-nov-2023</td><td>—</td></tr>
+      <tr><td>Egan-Jones</td><td>Senior no garantizado</td><td>A</td><td>03-ago-2016</td><td>—</td></tr>
+    </table>
+    <p class="note">Fuente: LSEG Issuer Ratings, CDS Overview (Markit 5 y 10 años, senior, USD) y StarMine, 3 de noviembre de 2026; confirmado con Bloomberg CRPR el 9 de noviembre de 2026.</p>
+  </div>
+  <div class="prose" style="margin-top:14px">
+    <p><b>Lectura.</b> Grado de inversión alto (A+ / A1) sin cambios desde 2018. El CDS a 5 años en 34.6 pb confirma un riesgo de crédito muy bajo y sirve como estimación del diferencial que se suma a la tasa del Tesoro para valuar el componente de bono recto del convertible. Fitch retiró su calificación en 2023 a petición del emisor, así que las referencias son S&amp;P y Moody's. Un convertible senior no garantizado tendría la misma calificación que la deuda actual.</p>
+  </div>
+</section>
+
+<section id="riesgos">
+  <h2>6. Riesgos de tesorería y necesidad de cobertura</h2>
+  <div class="card scroll">
+    <table>
+      <tr><th>Riesgo</th><th>Nivel</th><th>De dónde viene</th><th>Instrumentos</th></tr>
+      <tr><td><b>Tasa / refinanciamiento</b></td><td><span class="tag pend">Alto</span></td><td>7.7 mil millones vencen entre 2026 y 2028 con cupones de 1.0 % a 3.4 %, por debajo de lo que pagaría hoy en deuda recta.</td><td>Bono convertible para bajar el cupón; T-lock o swap de inicio diferido para fijar la tasa antes de emitir (como Molson Coors); IRS para mezclar tasa fija y flotante.</td></tr>
+      <tr><td><b>Tipo de cambio</b></td><td><span class="tag pend">Medio-alto</span></td><td>59 % de los ingresos y 34 % de los bonos están fuera de USD.</td><td>Forwards y opciones de divisas sobre flujos esperados; cross-currency swaps para la deuda en EUR y CHF.</td></tr>
+      <tr><td><b>Commodities</b></td><td><span class="tag pend">Medio</span></td><td>Azúcar, jarabe de maíz, jugo de naranja, café y aluminio para latas.</td><td>Futuros y swaps de commodities (azúcar No. 11 en ICE, aluminio en CME/LME).</td></tr>
+      <tr><td><b>Crédito</b></td><td><span class="tag ok">Bajo</span></td><td>A+ / A1 estable y CDS a 5 años de 34.6 pb.</td><td>Capacidad para emitir sin poner en riesgo la calificación.</td></tr>
+    </table>
+    <p class="note">Uso de derivados según la nota "Hedging Transactions and Derivative Financial Instruments" del 10-K de Coca-Cola.</p>
+  </div>
+</section>
+
+<section id="propuesta">
+  <h2>7. Propuesta de financiamiento y cobertura</h2>
+  <div class="grid2">
+    <div class="card scroll"><h3>Estructura inspirada en Molson Coors</h3>
+      <table>
+        <tr><th>Elemento</th><th>Molson Coors (2007)</th><th>Coca-Cola (propuesta)</th></tr>
+        <tr><td>Instrumento</td><td>Convertible senior no garantizado a 6 años</td><td>Convertible senior no garantizado a 5 años</td></tr>
+        <tr><td>Monto</td><td>$500M ampliado a $575M</td><td>≈ $3.0B</td></tr>
+        <tr><td>Uso de fondos</td><td>Recomprar bonos 6.38 % a 2012 y fondear pensiones</td><td>Refinanciar los bonos en USD de mar–jun 2027 ($3.0B)</td></tr>
+        <tr><td>Precio de conversión</td><td>25 % sobre $87.61 = $109.51</td><td>25 % sobre $96.03 = $120.04</td></tr>
+        <tr><td>Call spread</td><td>Calls al 25 % y warrants al 60 % ($140.18)</td><td>Calls a $120.04 y warrants al 60 % ($153.65)</td></tr>
+        <tr><td>Cobertura de tasa</td><td>T-lock (ganancia de $1.4M)</td><td>T-lock sobre el Tesoro a 5 años durante la colocación</td></tr>
+        <tr><td>Cobertura cambiaria</td><td>—</td><td>Cross-currency swap para refinanciar el bono EUR de mar-2027 ($1.68B equivalentes)</td></tr>
+        <tr><td>Beneficio buscado</td><td>~$15M menos de gasto financiero al año</td><td>Cupón menor que la deuda recta y dilución controlada con el call spread</td></tr>
+      </table>
+    </div>
+    <div class="card prose"><h3>Idea central</h3>
+      <p><b>No hay almuerzo gratis.</b> Un convertible es un bono recto más una opción call sobre la acción. Coca-Cola puede pagar un cupón muy por debajo de su rendimiento de mercado porque le entrega al inversionista esa opción. Cada punto menos de cupón o cada punto más de prima de conversión tiene un costo en derivados.</p>
+      <p><b>Lo que hay que medir.</b> Con beta de 0.27 y volatilidad baja, la opción que Coca-Cola regala vale poco: el cupón justo queda más cerca del de la deuda recta y el ahorro es menor que en Molson Coors. Pero también el call spread es barato, así que subir la prima efectiva al 60 % cuesta poco. Esa disyuntiva es el núcleo de la valuación.</p>
+      <p><b>Resultado.</b> La valuación de las secciones 8 a 10 mide esa disyuntiva con los mismos parámetros del Rmd y la calculadora.</p>
+    </div>
+  </div>
+</section>
+
+<section id="valuacion">
+  <h2>8. Valuación del convertible</h2>
+  <p class="lead">Un convertible es un bono recto más una opción call sobre la acción. El cupón justo es el que hace que ambos componentes sumen el nominal de 1,000 dólares. La opción se valúa con Black-Scholes y se comprueba con un árbol binomial CRR.</p>
+  <div class="kpis" id="kpis-val"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Cupón justo según prima de conversión y volatilidad</h3><div id="ch-cupon-prima" class="chart"></div>
+      <p class="note">Línea punteada: rendimiento de la deuda recta (Tesoro a 5 años + CDS).</p></div>
+    <div class="card scroll"><h3>Parámetros y descomposición por bono</h3><table id="tb-val"></table>
+      <p class="note">Volatilidades IVM de Bloomberg OMON, opciones de KO a ene-2029, 9-nov-2026. Tesoro a 5 años de Bloomberg USGG5YR (4.68 %). Volatilidad de contraste con datos de Yahoo Finance: GARCH(1,1) a 5 años 17.4 % y EWMA 19.9 %.</p></div>
+  </div>
+  <div class="prose" style="margin-top:14px"><p><b>No hay almuerzo gratis.</b> Cada punto más de prima de conversión sube el cupón justo, porque la opción que recibe el inversionista vale menos. Con la volatilidad implícita de Bloomberg (alrededor de 20 %), el cupón justo queda unos dos puntos por debajo de la deuda recta.</p></div>
+</section>
+
+<section id="callspread">
+  <h2>9. Call spread y prima efectiva</h2>
+  <div class="kpis" id="kpis-cs"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card"><h3>Costo económico de la conversión al vencimiento (millones de USD)</h3><div id="ch-cs" class="chart"></div></div>
+    <div class="card scroll"><h3>Molson Coors contra Coca-Cola</h3><table id="tb-cs"></table></div>
+  </div>
+</section>
+
+<section id="griegas">
+  <h2>10. Escenarios y griegas</h2>
+  <div class="grid2">
+    <div class="card"><h3>Valor del call spread en un año según el precio de KO (millones de USD)</h3><div id="ch-esc" class="chart"></div></div>
+    <div class="card scroll"><h3>Griegas de la posición</h3><table id="tb-greeks"></table>
+      <h3>T-lock sobre 3,000 millones</h3><table id="tb-tlock"></table></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Explora los escenarios: mueve el precio y la volatilidad</h3>
+    <div class="ctrl">
+      <label>Precio de KO en un año: <b id="lbl-px">$96</b><input type="range" id="sl-px" min="55" max="190" step="1" value="96"></label>
+      <label>Volatilidad implícita: <b id="lbl-vol">20.2 %</b><input type="range" id="sl-vol" min="12" max="30" step="0.5" value="20"></label>
+    </div>
+    <div class="kpis" id="kpis-esc" style="margin-bottom:8px"></div>
+    <div id="ch-esc2" class="chart"></div>
+    <p class="note">La curva es el valor del call spread dentro de un año para cada precio de KO, con la volatilidad elegida; el punto marca el escenario. La línea punteada es su costo inicial.</p>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Monte Carlo animado: cómo puede moverse KO en cinco años</h3>
+    <div class="ctrl"><button class="btn" id="mc-play">▶ Reproducir</button><button class="btn sec" id="mc-new">Nuevas trayectorias</button>
+      <span class="note" id="mc-info"></span></div>
+    <div id="ch-mc" class="chart" style="height:380px"></div>
+    <p class="note">60 trayectorias simuladas con movimiento browniano geométrico neutral al riesgo (volatilidad de 20.2 %, Tesoro de 4.68 %, dividendo de 2.21 %). Arriba de la línea de conversión los bonos se convierten; arriba del techo, la dilución ya no la cubre el call spread.</p>
+  </div>
+</section>
+
+<section id="simulador">
+  <h2>11. Implementación en Investopedia</h2>
+  <p class="lead">Investopedia no permite operar futuros, swaps ni vender opciones, así que las coberturas se replicaron con ETFs y opciones compradas, abiertas el 6 de noviembre y cerradas el 9 de noviembre de 2026. Precios de ejecución tomados del Trade History.</p>
+  <div class="kpis" id="kpis-sim" style="margin-bottom:16px"></div>
+  <div class="grid2"><div class="card scroll"><table id="tb-sim"></table></div>
+  <div class="card"><h3>P&amp;L por posición (USD)</h3><div id="ch-sim" class="chart"></div></div></div>
+  <div class="prose" style="margin-top:14px">
+    <p><b>Ningún riesgo se materializó.</b> En tres días KO, el euro, los bonos y el petróleo se movieron poco o a favor de la empresa, así que las opciones compradas perdieron su prima. El protective put de KO perdió solo 340 dólares; la call de USO explica tres cuartas partes de la pérdida porque el petróleo bajó, lo que a Coca-Cola le abarata energía y transporte.</p>
+    <p><b>Qué haríamos diferente.</b> Cubrir el horizonte completo del riesgo y no tres días; usar instrumentos sin prima (forwards, futuros, collars y swaps), que el simulador no permite; dimensionar cada cobertura contra la exposición real con una razón de cobertura; y evaluarla por la variación de la posición cubierta contra la no cubierta, no por su P&amp;L aislado.</p>
+  </div>
+</section>
+
+
+</main>
+<footer><div class="wrap">
+  Fuentes: LSEG Workspace (SOV, PEERS, Company Fundamentals, Debt Structure, Issuer Ratings, CDS Overview y StarMine), 3 de noviembre de 2026; The Coca-Cola Company, comunicado de resultados del 3T 2026 (Form 8-K) y Form 10-K. Material académico; no es una recomendación de inversión.
+</div></footer>
+
+<script>
+const f = (x,d=0)=>x.toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d});
+const kpi = (id, arr)=>document.getElementById(id).innerHTML = arr.map(([l,v,n])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join("");
+const cs=getComputedStyle(document.documentElement),tk=n=>cs.getPropertyValue(n).trim();
+const L = {paper_bgcolor:"rgba(0,0,0,0)",plot_bgcolor:"rgba(0,0,0,0)",font:{family:"Source Sans 3",color:tk("--tinta"),size:12},margin:{l:50,r:16,t:10,b:40},showlegend:false};
+Object.defineProperty(globalThis,"G",{get:()=>({gridcolor:tk("--linea")})}); // objeto nuevo en cada uso (Plotly modifica los ejes)
+const C = {displayModeBar:false,responsive:true};
+const COL = {USD:"#1f4e8c",EUR:"#4a86c8",CHF:"#3fa7b8"};
+
+// LSEG SOV / PEERS / Company Fundamentals
+kpi("kpis-mercado",[
+  ["Último precio","$94.80","3-nov-2026 · −1.07 % en el día"],["Rendimiento YTD","+35.6 %","52 semanas: $67.28 – $96.25"],
+  ["Market cap","$407.8 B","4.30 mil millones de acciones"],["P/E (LTM)","27.9x","Industria: 12.5x"],
+  ["Beta (5 años)","0.27","Acción defensiva"],["Dividend yield","2.21 %","Precio objetivo medio: $98.38"]]);
+kpi("kpis-9m",[
+  ["Ingresos 9M 2026","$39.2 B","3T 2026: $13.4 B"],["Margen operativo 9M","34.4 %","Utilidad operativa $13.5 B"],
+  ["Utilidad neta 9M","$12.4 B","UPA diluida $2.86"],["Flujo libre 9M","$11.4 B","Operación $12.5 B − capex $1.1 B"]]);
+const anios=[2021,2022,2023,2024,2025];
+const A={ingresos:[38.66,43.00,45.75,47.06,47.94],ebitda:[12.61,13.39,14.37,15.23,16.07],neta:[9.80,9.57,10.70,10.65,13.14]};
+Plotly.newPlot("ch-anual",[
+  {type:"bar",name:"Ingresos",x:anios,y:A.ingresos,marker:{color:"#1f4e8c"}},
+  {type:"bar",name:"EBITDA",x:anios,y:A.ebitda,marker:{color:"#4a86c8"}},
+  {type:"bar",name:"Utilidad neta",x:anios,y:A.neta,marker:{color:"#8fb5e0"}}],
+  {...L,barmode:"group",showlegend:true,legend:{orientation:"h",y:1.14},xaxis:{dtick:1},yaxis:G},C);
+const seg={lab:["Norteamérica","EMEA","Latinoamérica","Asia Pacífico","Embotelladoras","Corporativo"],mxn:[375727.49,207888.86,121493.99,102246.08,109883.84,2763.41]};
+Plotly.newPlot("ch-seg",[{type:"pie",hole:.5,labels:seg.lab,values:seg.mxn.map(v=>v/19.1903309589041/1000),
+  marker:{colors:["#1f4e8c","#4a86c8","#8fb5e0","#c9dbf0","#6f8fb3","#c3d0e0"]},textinfo:"label+percent",sort:false}],{...L,margin:{l:10,r:10,t:10,b:10}},C);
+
+const R={mb:[60.27,58.14,59.49,61.06,61.63],me:[32.61,31.13,31.42,32.36,33.53],mn:[25.36,22.26,23.39,22.63,27.40],roe:[46.20,40.51,42.82,41.86,45.97],roa:[10.79,10.23,11.24,10.74,12.79]};
+Plotly.newPlot("ch-rent",[
+  {type:"scatter",mode:"lines+markers",name:"ROE",x:anios,y:R.roe,line:{color:"#1f4e8c",width:3}},
+  {type:"scatter",mode:"lines+markers",name:"Margen EBITDA",x:anios,y:R.me,line:{color:"#4a86c8"}},
+  {type:"scatter",mode:"lines+markers",name:"Margen neto",x:anios,y:R.mn,line:{color:"#3fa7b8"}},
+  {type:"scatter",mode:"lines+markers",name:"ROA",x:anios,y:R.roa,line:{color:"#7d8a9c",dash:"dot"}}],
+  {...L,showlegend:true,legend:{orientation:"h",y:1.14},xaxis:{dtick:1},yaxis:G},C);
+const P=[["KO.N","Coca-Cola",27.94,43.32,111.36],["PEP.OQ","PepsiCo",17.26,42.85,232.73],["KDP.OQ","Keurig Dr Pepper",31.35,8.36,117.39],
+  ["HEIN.AS","Heineken",19.69,9.94,107.96],["DANO.PA","Danone",21.88,10.84,100.64],["DGE.L","Diageo",30.37,14.99,197.88],
+  ["ULVR.L","Unilever",24.11,30.96,198.28],["NESN.S","Nestlé",29.19,26.53,215.00]];
+Plotly.newPlot("ch-peers",[{type:"scatter",mode:"markers+text",x:P.map(p=>p[4]),y:P.map(p=>p[3]),text:P.map(p=>p[1]),textposition:"top center",
+  marker:{size:P.map(p=>p[2]),sizemode:"diameter",sizeref:0.8,color:P.map(p=>p[0]==="KO.N"?"#1f4e8c":"#9fb0c6")}}],
+  {...L,xaxis:{title:"D/E (%)",...G},yaxis:{title:"ROE (%)",...G}},C);
+document.getElementById("tb-peers").insertAdjacentHTML("beforeend",P.map(p=>`<tr${p[0]==="KO.N"?' style="font-weight:600"':""}><td>${p[0]}</td><td>${p[1]}</td><td class="num">${f(p[2],2)}</td><td class="num">${f(p[3],2)}</td><td class="num">${f(p[4],2)}</td></tr>`).join(""));
+
+// LSEG Debt Structure: 48 bonos vigentes (millones de USD)
+const B=[["2026-11-15",151.7,6.950,"USD"],["2027-03-09",1679.0,1.125,"EUR"],["2027-03-25",1000.0,3.375,"USD"],["2027-05-25",500.0,2.900,"USD"],
+["2027-06-01",1500.0,1.450,"USD"],["2028-03-05",750.0,1.500,"USD"],["2028-03-15",1300.0,1.000,"USD"],["2028-09-15",131.4,6.750,"USD"],
+["2028-10-02",700.7,1.000,"CHF"],["2029-03-09",783.5,0.125,"EUR"],["2029-03-15",1119.3,0.125,"EUR"],["2029-09-06",1000.0,2.125,"USD"],
+["2030-03-25",1250.0,3.450,"USD"],["2030-05-06",727.5,0.400,"EUR"],["2030-06-01",1500.0,1.650,"USD"],["2031-03-05",750.0,2.000,"USD"],
+["2031-03-08",839.5,1.250,"EUR"],["2031-03-15",1300.0,1.375,"USD"],["2032-01-05",2000.0,2.250,"USD"],["2032-05-14",559.6,3.125,"EUR"],
+["2033-03-09",727.5,0.500,"EUR"],["2033-03-15",839.5,0.375,"EUR"],["2034-05-13",1000.0,5.000,"USD"],["2034-08-14",750.0,4.650,"USD"],
+["2035-03-09",1679.0,1.625,"EUR"],["2036-05-06",559.6,0.950,"EUR"],["2036-09-02",559.6,1.100,"EUR"],["2036-10-15",120.2,6.700,"USD"],
+["2037-03-18",1.0,5.710,"USD"],["2037-08-15",559.6,3.375,"EUR"],["2038-01-15",88.8,6.750,"USD"],["2040-03-15",951.4,0.800,"EUR"],
+["2040-03-25",218.3,4.125,"USD"],["2040-06-01",1000.0,2.500,"USD"],["2041-03-09",727.5,1.000,"EUR"],["2041-05-05",750.0,2.875,"USD"],
+["2044-05-14",559.6,3.500,"EUR"],["2050-03-25",540.9,4.200,"USD"],["2050-06-01",1500.0,2.600,"USD"],["2051-03-05",1700.0,3.000,"USD"],
+["2051-03-15",1500.0,2.500,"USD"],["2053-08-15",559.6,3.750,"EUR"],["2054-05-13",1100.0,5.300,"USD"],["2055-01-14",1500.0,5.200,"USD"],
+["2060-06-01",1000.0,2.750,"USD"],["2064-05-13",1650.0,5.400,"USD"],["2093-07-29",95.8,7.375,"USD"],["2098-05-15",96.3,7.000,"USD"]];
+const hoy=new Date("2026-11-03"), tot=B.reduce((s,b)=>s+b[1],0);
+const cupon=B.reduce((s,b)=>s+b[1]*b[2],0)/tot, plazo=B.reduce((s,b)=>s+b[1]*(new Date(b[0])-hoy)/3.15576e10,0)/tot;
+const v2628=B.filter(b=>+b[0].slice(0,4)<=2028).reduce((s,b)=>s+b[1],0);
+const o={cp:73,circ:4923,lp:36623}, d={cp:1551,circ:1822,lp:42119};
+kpi("kpis-deuda",[
+  ["Deuda total (dic-2025)","$45.5 B","93 % de largo plazo"],["Deuda total (oct-2026)","$"+f((o.cp+o.circ+o.lp)/1000,1)+" B","8-K del 3T 2026"],
+  ["Bonos vigentes","$"+f(tot/1000,1)+" B",B.length+" emisiones · LSEG"],["Cupón promedio",f(cupon,2)+" %","Ponderado por monto"],
+  ["Plazo promedio",f(plazo,1)+" años","Ponderado por monto"],["Vence 2026–2028","$"+f(v2628/1000,1)+" B","Muro de refinanciamiento"],
+  ["Cobertura de intereses","9.1x","EBIT / intereses, 2025"],["Deuda neta / EBITDA","1.85x","2025"]]);
+const mon=["USD","EUR","CHF"], porMon=mon.map(m=>B.filter(b=>b[3]===m).reduce((s,b)=>s+b[1],0));
+Plotly.newPlot("ch-moneda",[{type:"pie",hole:.55,labels:mon,values:porMon,marker:{colors:mon.map(m=>COL[m])},textinfo:"label+percent",sort:false}],{...L,margin:{l:10,r:10,t:10,b:10}},C);
+Plotly.newPlot("ch-cambio",[
+  {type:"bar",name:"Dic-2025",x:["Papel comercial","Circulante de LP","Largo plazo"],y:[d.cp,d.circ,d.lp],marker:{color:"#8fb5e0"}},
+  {type:"bar",name:"Oct-2026",x:["Papel comercial","Circulante de LP","Largo plazo"],y:[o.cp,o.circ,o.lp],marker:{color:"#1f4e8c"}}],
+  {...L,barmode:"group",showlegend:true,legend:{orientation:"h",y:1.12},yaxis:G},C);
+const cub=b=>{const y=+b[0].slice(0,4);return y<=2040?String(y):"2041+"};
+const cats=[...new Set(B.map(cub))];
+Plotly.newPlot("ch-venc",mon.map(m=>({type:"bar",name:m,x:cats,y:cats.map(c=>B.filter(b=>b[3]===m&&cub(b)===c).reduce((s,b)=>s+b[1],0)/1000),marker:{color:COL[m]}})),
+  {...L,barmode:"stack",showlegend:true,legend:{orientation:"h",y:1.1},xaxis:{type:"category"},yaxis:G},C);
+const lim=B.filter(b=>+b[0].slice(0,4)<2066);
+Plotly.newPlot("ch-cupon",mon.map(m=>{const x=lim.filter(b=>b[3]===m);return {type:"scatter",mode:"markers",name:m,x:x.map(b=>b[0]),y:x.map(b=>b[2]),
+  marker:{size:x.map(b=>8+Math.sqrt(b[1])*0.7),color:COL[m],opacity:.8},text:x.map(b=>`${m} ${b[2]} % · vence ${b[0]}<br>$${f(b[1],1)} M`),hoverinfo:"text"}}),
+  {...L,showlegend:true,legend:{orientation:"h",y:1.12},xaxis:G,yaxis:{title:"Cupón (%)",...G}},C);
+document.getElementById("tb-prox").insertAdjacentHTML("beforeend",B.filter(b=>+b[0].slice(0,4)<=2028).map(b=>`<tr><td>${b[0]}</td><td>${b[3]}</td><td class="num">${f(b[2],3)} %</td><td class="num">${f(b[1],1)}</td></tr>`).join("")
+  +`<tr style="font-weight:600"><td>Total</td><td></td><td></td><td class="num">${f(v2628,1)}</td></tr>`);
+
+kpi("kpis-cred",[["S&P","A+","Estable"],["Moody's","A1","Estable"],["CDS 5 años","34.6 pb","Markit, 3-nov-2026"],["CDS 10 años","57.7 pb","Markit, 3-nov-2026"],["StarMine credit risk","95 / 100","Riesgo de crédito muy bajo"],["PD a 1 año (Bloomberg)","0.21 %","MIPD · categoría IG1"]]);
+// ===== Valuación (mismos parámetros que el Rmd y la calculadora) =====
+const PRM={S:96.03,vol:0.2018,volw:0.199,q:0.0221,rf:0.046767,swap:0.043975,dv01:4456.30,cds:0.003456,T:5,M:3000e6,pc:0.25,pt:0.60};
+const Nn=x=>{const t=1/(1+0.2316419*Math.abs(x)),d=0.3989423*Math.exp(-x*x/2),p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p};
+const nd=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+const bs=(S,K,T,r,q,s)=>{const d1=(Math.log(S/K)+(r-q+s*s/2)*T)/(s*Math.sqrt(T)),d2=d1-s*Math.sqrt(T);
+  return {c:S*Math.exp(-q*T)*Nn(d1)-K*Math.exp(-r*T)*Nn(d2),delta:Math.exp(-q*T)*Nn(d1),gamma:Math.exp(-q*T)*nd(d1)/(S*s*Math.sqrt(T)),vega:S*Math.exp(-q*T)*nd(d1)*Math.sqrt(T)/100}};
+const bono=(c,y,T)=>{let v=0;for(let t=1;t<=T;t++)v+=c*1000/Math.pow(1+y,t);return v+1000/Math.pow(1+y,T)};
+const yR=PRM.rf+PRM.cds;
+const cuponJusto=(pc,s)=>{const K=PRM.S*(1+pc),op=1000/K*bs(PRM.S,K,PRM.T,PRM.rf,PRM.q,s).c;let lo=-.1,hi=.3;for(let i=0;i<80;i++){const m=(lo+hi)/2;(bono(m,yR,PRM.T)+op>1000)?hi=m:lo=m}return (lo+hi)/2};
+const Kc=PRM.S*(1+PRM.pc),Kt=PRM.S*(1+PRM.pt),ratio=1000/Kc,oc=bs(PRM.S,Kc,PRM.T,PRM.rf,PRM.q,PRM.vol),ow=bs(PRM.S,Kt,PRM.T,PRM.rf,PRM.q,PRM.volw);
+const cj=cuponJusto(PRM.pc,PRM.vol),acc=ratio*PRM.M/1000,costoCS=(oc.c-ow.c)*acc,ahorro=(yR-cj)*PRM.M;
+kpi("kpis-val",[["Cupón justo",f(cj*100,2)+" %","Prima de conversión 25 %"],["Deuda recta",f(yR*100,2)+" %","Tesoro 5 años + CDS 34.6 pb"],
+  ["Ahorro anual","$"+f(ahorro/1e6,1)+" M","Sobre $3.0 B"],["Valor de la opción","$"+f(ratio*oc.c,2),"Por bono de $1,000"]]);
+document.getElementById("tb-val").innerHTML="<tr><th>Concepto</th><th class='num'>Valor</th></tr>"+[
+  ["Precio de KO (9-nov)","$"+f(PRM.S,2)],["Vol. implícita strike 120 / warrant",f(PRM.vol*100,1)+" % / "+f(PRM.volw*100,1)+" %"],["Dividendo",f(PRM.q*100,2)+" %"],
+  ["Tesoro 5 años (Bloomberg USGG5YR)",f(PRM.rf*100,2)+" %"],["Swap SOFR 5 años (Bloomberg SWPM)",f(PRM.swap*100,2)+" %"],["Vol. GARCH(1,1) a 5 años / EWMA","17.4 % / 19.9 %"],["Precio de conversión","$"+f(Kc,2)],["Acciones por bono",f(ratio,3)],
+  ["Call Black-Scholes por acción","$"+f(oc.c,2)],["Bono recto al cupón justo","$"+f(bono(cj,yR,PRM.T),2)],["Opción por bono","$"+f(ratio*oc.c,2)]]
+  .map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td></tr>`).join("");
+const primas=[0.15,0.20,0.25,0.30,0.35,0.40],vols=[0.16,0.18,0.20,0.22],vc=["#8fb5e0","#1f4e8c","#4a86c8","#3fa7b8"];
+Plotly.newPlot("ch-cupon-prima",[...vols.map((v,i)=>({type:"scatter",mode:"lines+markers",name:"Vol. "+(v*100)+" %",x:primas.map(p=>p*100),y:primas.map(p=>cuponJusto(p,v)*100),line:{color:vc[i],width:i===2?3.5:2}})),
+  {type:"scatter",mode:"lines",name:"Deuda recta",x:[15,40],y:[yR*100,yR*100],line:{color:"#7d8a9c",dash:"dash"}}],
+  {...L,showlegend:true,legend:{orientation:"h",y:1.16},xaxis:{title:"Prima de conversión (%)",...G},yaxis:{title:"Cupón justo (%)",...G}},C);
+
+kpi("kpis-cs",[["Strike de las calls","$"+f(Kc,2),"Prima de 25 %"],["Strike de los warrants","$"+f(Kt,2),"Prima de 60 %"],
+  ["Costo neto","$"+f(costoCS/1e6,1)+" M",f(costoCS/PRM.M*100,2)+" % de la emisión"],["Se paga en",f(costoCS/ahorro,1)+" años","Con el ahorro de cupón"]]);
+const xs=Array.from({length:101},(_,i)=>PRM.S*(0.6+1.6*i/100));
+Plotly.newPlot("ch-cs",[{type:"scatter",mode:"lines",name:"Sin call spread",x:xs,y:xs.map(x=>Math.max(x-Kc,0)*acc/1e6),line:{color:"#1f4e8c",width:3}},
+  {type:"scatter",mode:"lines",name:"Con call spread",x:xs,y:xs.map(x=>Math.max(x-Kt,0)*acc/1e6),line:{color:"#4a86c8",width:3,dash:"dash"}}],
+  {...L,showlegend:true,legend:{orientation:"h",y:1.12},xaxis:{title:"Precio de KO al vencimiento",...G},yaxis:G},C);
+document.getElementById("tb-cs").innerHTML="<tr><th>Elemento</th><th>Molson Coors</th><th>Coca-Cola</th></tr>"+[
+  ["Emisión","$575 M","$3,000 M"],["Cupón","2.5 %",f(cj*100,2)+" % (justo)"],["Precio de conversión","$109.51","$"+f(Kc,2)],
+  ["Strike del warrant","$140.18","$"+f(Kt,2)],["Costo neto del call spread","$49.7 M (8.6 %)","$"+f(costoCS/1e6,1)+" M ("+f(costoCS/PRM.M*100,1)+" %)"],
+  ["Ahorro anual buscado","≈ $15 M","$"+f(ahorro/1e6,1)+" M"]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("");
+
+const esc=[-0.30,-0.15,0,0.15,0.30,0.60,0.80];
+const vEsc=esc.map(x=>(bs(PRM.S*(1+x),Kc,PRM.T-1,PRM.rf,PRM.q,PRM.vol).c-bs(PRM.S*(1+x),Kt,PRM.T-1,PRM.rf,PRM.q,PRM.volw).c)*acc/1e6);
+Plotly.newPlot("ch-esc",[{type:"bar",x:esc.map(x=>(x>0?"+":"")+x*100+" %"),y:vEsc,marker:{color:vEsc.map(v=>v>=costoCS/1e6?"#1f4e8c":"#8fb5e0")},text:vEsc.map(v=>f(v,0)),textposition:"outside"}],
+  {...L,xaxis:{title:"Movimiento de KO",type:"category"},yaxis:G,shapes:[{type:"line",xref:"paper",x0:0,x1:1,y0:costoCS/1e6,y1:costoCS/1e6,line:{dash:"dot",color:"#7d8a9c"}}]},C);
+document.getElementById("tb-greeks").innerHTML="<tr><th>Griega</th><th class='num'>Calls</th><th class='num'>Warrants</th><th class='num'>Neto</th></tr>"+
+  [["Delta (millones de acciones)","delta",1e6,2],["Gamma (miles de acciones por $)","gamma",1e3,1],["Vega (millones $ por punto)","vega",1e6,2]]
+  .map(([l,k,u,d])=>`<tr><td>${l}</td><td class="num">${f(oc[k]*acc/u,d)}</td><td class="num">${f(ow[k]*acc/u,d)}</td><td class="num">${f((oc[k]-ow[k])*acc/u,d)}</td></tr>`).join("");
+document.getElementById("tb-tlock").innerHTML="<tr><th>Cambio en la tasa</th><th class='num'>Pago del T-lock (M)</th></tr>"+
+  [-50,-25,25,50,100].map(pb=>`<tr><td>${pb>0?"+":""}${pb} pb</td><td class="num">${f(PRM.dv01*PRM.M/10e6*pb/1e6,1)}</td></tr>`).join("")+`<tr><td colspan='2' class='note'>DV01 de Bloomberg SWPM: ${f(PRM.dv01*PRM.M/10e6/1e6,2)} M por pb. El pago compensa el mayor costo de la emisión. El swap SOFR está ${f((PRM.rf-PRM.swap)*1e4,0)} pb por debajo del Tesoro; el Tesoro se movió entre 3.50 % y 5.09 % en el último año.</td></tr>`;
+
+// Investopedia: actualizar con Trade History del 9-nov
+const SIM=[["KO","Acciones",1000,95.99,95.83,"Precio de la acción"],["KO Put 95 · 18-dic","Opción",10,2.33,2.15,"Precio de la acción"],
+  ["FXE Put 103 · 18-dic","Opción",10,1.05,0.45,"Tipo de cambio"],["TLT Put 82 · 18-dic","Opción",10,1.52,1.42,"Tasa de interés"],
+  ["USO Call 149 · 18-dic","Opción",10,11.45,7.95,"Energía y transporte"]];
+document.getElementById("tb-sim").innerHTML="<tr><th>Posición</th><th>Tipo</th><th class='num'>Cantidad</th><th class='num'>Entrada</th><th class='num'>Salida</th><th class='num'>P&L</th><th>Riesgo que cubre</th></tr>"+
+  SIM.map(r=>{const m=r[1]==="Opción"?100:1,pl=(r[3]!=null&&r[4]!=null)?(r[4]-r[3])*r[2]*m:null;
+  return `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${f(r[2])}</td><td class="num">${r[3]==null?'<span class="tag pend">pendiente</span>':"$"+f(r[3],2)}</td><td class="num">${r[4]==null?'<span class="tag pend">pendiente</span>':"$"+f(r[4],2)}</td><td class="num">${pl==null?"—":(pl<0?"−$":"$")+f(Math.abs(pl),0)}</td><td>${r[5]}</td></tr>`}).join("");
+const plS=SIM.map(r=>(r[4]-r[3])*r[2]*(r[1]==="Opción"?100:1)), totS=plS.reduce((a,b)=>a+b,0), primaS=SIM.filter(r=>r[1]==="Opción").reduce((a,r)=>a+r[3]*r[2]*100,0);
+kpi("kpis-sim",[["P&L de la cobertura","−$"+f(-totS),"6 al 9 de noviembre"],["Protective put KO","−$"+f(-(plS[0]+plS[1])),"Acciones + put"],["Prima pagada","$"+f(primaS),"Opciones compradas"],["Mayor pérdida","USO −31 %","Petróleo a la baja"]]);
+document.getElementById("tb-sim").insertAdjacentHTML("beforeend",`<tr style="font-weight:600"><td>Total</td><td></td><td></td><td></td><td></td><td class="num">−$${f(-totS)}</td><td></td></tr>`);
+Plotly.newPlot("ch-sim",[{type:"bar",orientation:"h",y:SIM.map(r=>r[0]).reverse(),x:plS.slice().reverse(),marker:{color:plS.slice().reverse().map(v=>v>=0?"#1f4e8c":"#8fb5e0")},text:plS.slice().reverse().map(v=>f(v)),textposition:"outside"}],
+  {...L,margin:{l:140,r:40,t:10,b:30},xaxis:G,yaxis:{automargin:true}},C);
+
+// ===== Escenarios interactivos =====
+const csVal=(S,v)=>(bs(S,Kc,PRM.T-1,PRM.rf,PRM.q,v).c-bs(S,Kt,PRM.T-1,PRM.rf,PRM.q,Math.max(v-(PRM.vol-PRM.volw),0.01)).c)*acc/1e6;
+const csDelta=(S,v)=>(bs(S,Kc,PRM.T-1,PRM.rf,PRM.q,v).delta-bs(S,Kt,PRM.T-1,PRM.rf,PRM.q,Math.max(v-(PRM.vol-PRM.volw),0.01)).delta)*acc/1e6;
+const gridS=Array.from({length:136},(_,i)=>55+i);
+function upEsc(){
+  const S=+document.getElementById("sl-px").value, v=+document.getElementById("sl-vol").value/100, val=csVal(S,v), g=val-costoCS/1e6;
+  document.getElementById("lbl-px").textContent="$"+S+" ("+(S>=PRM.S?"+":"")+f((S/PRM.S-1)*100,0)+" %)";
+  document.getElementById("lbl-vol").textContent=f(v*100,1)+" %";
+  kpi("kpis-esc",[["Valor del call spread","$"+f(val,1)+" M","En un año"],["Ganancia vs. costo",(g>=0?"+$":"−$")+f(Math.abs(g),1)+" M","Costo inicial $"+f(costoCS/1e6,1)+" M"],
+    ["Delta","" +f(csDelta(S,v),2)+" M acc.","Acciones equivalentes"],["¿Se convierte?",S>Kt?"Sí, arriba del techo":S>Kc?"Sí, cubierto":"No","Conversión $"+f(Kc,2)+" · techo $"+f(Kt,2)]]);
+  Plotly.react("ch-esc2",[{type:"scatter",mode:"lines",x:gridS,y:gridS.map(x=>csVal(x,v)),line:{color:"#1f4e8c",width:3},name:"Valor"},
+    {type:"scatter",mode:"markers",x:[S],y:[val],marker:{size:14,color:"#3fa7b8",line:{color:"#fff",width:2}},name:"Escenario"}],
+    {...L,xaxis:{title:"Precio de KO en un año",...G},yaxis:{title:"Millones USD",...G,range:[0,Math.max(...gridS.map(x=>csVal(x,0.30)))*1.05]},
+     shapes:[{type:"line",xref:"paper",x0:0,x1:1,y0:costoCS/1e6,y1:costoCS/1e6,line:{dash:"dot",color:"#7d8a9c"}},
+       {type:"line",x0:Kc,x1:Kc,yref:"paper",y0:0,y1:1,line:{dash:"dot",color:"#8fb5e0"}},{type:"line",x0:Kt,x1:Kt,yref:"paper",y0:0,y1:1,line:{dash:"dot",color:"#8fb5e0"}}]},C);
+}
+["sl-px","sl-vol"].forEach(id=>document.getElementById(id).addEventListener("input",upEsc)); upEsc();
+
+// ===== Monte Carlo animado =====
+const NP=60, NS=60, dtm=PRM.T/NS; let seed=7, paths=[], step=0, timer=null;
+const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const gauss=()=>{let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+const tt=Array.from({length:NS+1},(_,i)=>i*dtm);
+function genPaths(){paths=Array.from({length:NP},()=>{let s=PRM.S;const r=[s];for(let i=0;i<NS;i++){s*=Math.exp((PRM.rf-PRM.q-0.5*PRM.vol**2)*dtm+PRM.vol*Math.sqrt(dtm)*gauss());r.push(s)}return r})}
+function drawMC(k){
+  const tr=paths.map(p=>({type:"scatter",mode:"lines",x:tt.slice(0,k+1),y:p.slice(0,k+1),line:{width:1,color:p[k]>Kt?"#3fa7b8":p[k]>Kc?"#4a86c8":"#a9bfd9"},hoverinfo:"skip"}));
+  Plotly.react("ch-mc",tr,{...L,xaxis:{title:"Años",range:[0,PRM.T],autorange:false,...G},yaxis:{title:"Precio de KO (USD)",range:[30,260],autorange:false,...G},
+    shapes:[{type:"line",xref:"paper",x0:0,x1:1,y0:Kc,y1:Kc,line:{color:"#1f4e8c",dash:"dash",width:2}},{type:"line",xref:"paper",x0:0,x1:1,y0:Kt,y1:Kt,line:{color:"#3fa7b8",dash:"dash",width:2}}],
+    annotations:[{xref:"paper",x:1,y:Kc,text:"Conversión $"+f(Kc,0),showarrow:false,xanchor:"right",yanchor:"bottom",font:{size:11}},{xref:"paper",x:1,y:Kt,text:"Techo $"+f(Kt,0),showarrow:false,xanchor:"right",yanchor:"bottom",font:{size:11}}]},C);
+  const arriba=paths.filter(p=>p[k]>Kc).length, techo=paths.filter(p=>p[k]>Kt).length;
+  document.getElementById("mc-info").textContent=`Año ${f(k*dtm,1)} · ${arriba} de ${NP} trayectorias arriba de la conversión (${techo} arriba del techo)`;
+}
+function play(){ if(timer){clearInterval(timer);timer=null;document.getElementById("mc-play").textContent="▶ Reproducir";return}
+  if(step>=NS) step=0; document.getElementById("mc-play").textContent="❚❚ Pausa";
+  timer=setInterval(()=>{step++;drawMC(step);if(step>=NS){clearInterval(timer);timer=null;document.getElementById("mc-play").textContent="↻ Repetir"}},90); }
+document.getElementById("mc-play").addEventListener("click",play);
+document.getElementById("mc-new").addEventListener("click",()=>{if(timer){clearInterval(timer);timer=null}seed=Math.floor(Math.random()*1e6)+1;genPaths();step=0;drawMC(0);document.getElementById("mc-play").textContent="▶ Reproducir"});
+genPaths(); drawMC(0);
+</script>
+
+</body>
+</html>

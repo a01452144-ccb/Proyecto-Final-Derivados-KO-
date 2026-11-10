@@ -1,0 +1,16 @@
+parametro,valor,unidad,fuente,fecha
+precio_ko,96.03,USD,Bloomberg OMON / DES (KO US Equity),2026-11-09
+vol_implicita_strike_120,20.18,%,Bloomberg OMON (IVM call ene-2029),2026-11-09
+vol_implicita_warrant,19.90,%,Bloomberg OMON (IVM call ene-2029 strikes 140-145),2026-11-09
+vol_historica_30d,19.80,%,Yahoo Finance via Colab,2026-11-09
+vol_garch_5a,17.41,%,GARCH(1,1) estimado en Colab con Yahoo Finance,2026-11-09
+tesoro_5a,4.6767,%,Bloomberg USGG5YR Index,2026-11-09
+swap_sofr_5a,4.3975,%,Bloomberg SWPM (USD OIS ANN vs SOFR 5Y),2026-11-09
+dv01_swap_10mm,4456.30,USD por pb,Bloomberg SWPM,2026-11-09
+cds_5a,34.564,pb,LSEG CDS Overview (Markit),2026-11-03
+dividend_yield,2.21,%,LSEG SOV y Bloomberg DES,2026-11-09
+beta_spx,0.38,,Bloomberg DES,2026-11-09
+deuda_total_q3_2026,41619,MUSD,Bloomberg FA,2026-10-02
+deuda_bonos_ddis,42533.97,MUSD,Bloomberg DDIS (principal),2026-11-09
+gasto_intereses_2025,1653,MUSD,Bloomberg FA (suma de 4 trimestres),2025-12-31
+pd_mercado_1a,0.2078,%,Bloomberg CRPR (MIPD),2026-11-09
