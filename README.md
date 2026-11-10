@@ -26,7 +26,7 @@ Estrategia de financiamiento y cobertura para Coca-Cola basada en el caso Molson
 |---|---|
 | [`01_Reporte_Ejecutivo`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/01_Reporte_Ejecutivo) | Reporte ejecutivo: diagnóstico, estrategia, valoración, riesgos y recomendación |
 | [`02_Dashboard`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/02_Dashboard) | Dashboard HTML con Plotly: empresa, deuda, calificaciones, valuación, call spread, escenarios interactivos, Monte Carlo animado y resultados del simulador |
-| [`03_Codigo_y_Datos`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/03_Codigo_y_Datos) | R Markdown y su HTML con el código visible; código en Python (`.py` y notebook con outputs) en `05_Python`; archivos de datos en `datos` |
+| [`03_Codigo y Datos`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/03_Codigo%20y%20Datos) | R Markdown y su HTML con el código visible; código en Python (`.py` y notebook con outputs) en `05_Python`; archivos de datos en `datos` |
 | [`04_Calculadora`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/04_Calculadora) | Calculadora interactiva del convertible y el call spread (archivo HTML autocontenido) |
 | [`05_Prompt_IA`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/05_Prompt_IA) | Uso de inteligencia artificial: prompts, código recibido y correcciones |
 | [`06_Capturas`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/06_Capturas) | Capturas de Investopedia y Bloomberg (OMON, DES, FA, DDIS, CRPR, USGG5YR y SWPM) con su explicación |
@@ -37,12 +37,12 @@ Estrategia de financiamiento y cobertura para Coca-Cola basada en el caso Molson
 |---|---|---|
 | Dashboard interactivo | [Abrir dashboard](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/02_Dashboard/KO_Dashboard.html) | [Ver aquí](https://raw.githack.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/main/02_Dashboard/KO_Dashboard.html) |
 | Calculadora del convertible | [Abrir calculadora](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/04_Calculadora/Calculadora_Convertible_KO.html) | [Ver aquí](https://raw.githack.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/main/04_Calculadora/Calculadora_Convertible_KO.html) |
-| Reporte reproducible (HTML del R Markdown) | [Abrir reporte](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/03_Codigo_y_Datos/Proyecto_Final_KO.html) | [Ver aquí](https://raw.githack.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/main/03_Codigo_y_Datos/Proyecto_Final_KO.html) |
-| Notebook de Python | [Abrir en Google Colab](https://colab.research.google.com/github/a01452144-ccb/Proyecto-Final-Derivados-KO-/blob/main/03_Codigo_y_Datos/05_Python/Valuacion_Convertible_KO.ipynb) | [Copia en Google Drive](https://colab.research.google.com/drive/1FT61K311Yn0GtkBNkJtZOYHdaaIpc5lN?usp=sharing) |
+| Reporte reproducible (HTML del R Markdown) | [Abrir reporte](https://a01452144-ccb.github.io/Proyecto-Final-Derivados-KO-/03_Codigo%20y%20Datos/Proyecto_Final_KO.html) | [Ver aquí](https://raw.githack.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/main/03_Codigo%20y%20Datos/Proyecto_Final_KO.html) |
+| Notebook de Python | [Abrir en Google Colab](https://colab.research.google.com/github/a01452144-ccb/Proyecto-Final-Derivados-KO-/blob/main/03_Codigo%20y%20Datos/05_Python/Valuacion_Convertible_KO.ipynb) | [Copia en Google Drive](https://colab.research.google.com/drive/1FT61K311Yn0GtkBNkJtZOYHdaaIpc5lN?usp=sharing) |
 
 ## Datos usados y su fuente
 
-Todos los archivos están en [`03_Codigo_y_Datos/datos`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/03_Codigo_y_Datos/datos).
+Todos los archivos están en [`03_Codigo y Datos/datos`](https://github.com/a01452144-ccb/Proyecto-Final-Derivados-KO-/tree/main/03_Codigo%20y%20Datos/datos).
 
 | Archivo | Contenido | Fuente |
 |---|---|---|
@@ -66,7 +66,7 @@ Otras fuentes: The Coca-Cola Company, Form 10-K 2025 y 8-K del tercer trimestre 
 
 ## Cómo reproducirlo
 
-- **R:** abrir `03_Codigo_y_Datos/Proyecto_Final_KO.Rmd` en RStudio (paquetes `knitr`, `rmarkdown` y `quantmod`) y dar *Knit*. La carpeta `datos` debe quedar junto al Rmd.
+- **R:** abrir `03_Codigo y Datos/Proyecto_Final_KO.Rmd` en RStudio (paquetes `knitr`, `rmarkdown` y `quantmod`) y dar *Knit*. La carpeta `datos` debe quedar junto al Rmd.
 - **Python:** abrir el notebook en Google Colab con el enlace de arriba y ejecutar *Entorno de ejecución → Ejecutar todas*.
 - **Dashboard y calculadora:** abrirlos con los enlaces de la sección *Ver en línea*, o descargar los archivos `.html` y abrirlos en cualquier navegador (el dashboard requiere internet para cargar Plotly).
 
